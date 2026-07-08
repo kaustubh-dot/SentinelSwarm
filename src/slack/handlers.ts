@@ -1,7 +1,8 @@
 import type { App } from "@slack/bolt";
 import type { AppConfig } from "../config";
 import { createFallbackPlan } from "../planner/fallbackPlanner";
-import type { IncidentPlan } from "../planner/schema";
+import { parseIncidentReport, shouldOpenIncidentControlRoom, type ParsedIncidentReport } from "../planner/incidentParser";
+import type { Evidence, IncidentPlan } from "../planner/schema";
 import { getFloodRisk } from "../tools/flood";
 import { findZone, loadLocalData } from "../tools/localData";
 import { getWeatherRisk } from "../tools/weather";
@@ -20,14 +21,18 @@ type StoredPlan = {
 
 const planStore = new Map<string, StoredPlan>();
 
-const parseZoneInput = (text: string): string => {
-  const match = text.match(/zone\s+([a-z])/i);
-  return match ? `Zone ${match[1].toUpperCase()}` : "Zone B";
-};
-
 const userLabel = (body: any): string => {
   return body.user?.username ?? body.user?.name ?? body.user?.id ?? "coordinator";
 };
+
+const createReportEvidence = (incident: ParsedIncidentReport, channelId: string): Evidence => ({
+  id: "field-report-current",
+  source: "Current Slack field report",
+  channel: `<#${channelId}>`,
+  text: incident.normalizedText,
+  confidence: 0.94,
+  sourceType: "slack"
+});
 
 export const registerHandlers = (app: App, config: AppConfig): void => {
   app.event("app_mention", async ({ event, client, say, logger }) => {
@@ -43,28 +48,31 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
       return;
     }
 
-    if (!/analyze/i.test(text)) {
+    if (!shouldOpenIncidentControlRoom(text)) {
       await say({
-        text: "Try `@SentinelSwarm analyze Zone B risk` to open an Incident Control Room.",
+        text: "Try `@SentinelSwarm analyze Zone B risk` or report a zone incident like `@SentinelSwarm heavy rain near Zone A, 25 people need evacuation, route blocked`.",
         thread_ts: threadTs
       });
       return;
     }
 
     try {
+      const incident = parseIncidentReport(text);
       const localData = loadLocalData();
-      const zone = findZone(localData.zones, parseZoneInput(text));
+      const zone = findZone(localData.zones, incident.zoneInput);
       const context = await searchSlackContext(client, eventAny.action_token, zone.name, config.forceMocks);
       const weather = await getWeatherRisk(zone, config.forceMocks);
       const flood = await getFloodRisk(zone, config.forceMocks);
+      const reportEvidence = createReportEvidence(incident, eventAny.channel);
 
       const plan = createFallbackPlan({
         zone,
         localData,
-        evidence: context.evidence,
+        evidence: [reportEvidence, ...context.evidence],
         contextStatus: context.status,
         weather,
-        flood
+        flood,
+        incident
       });
 
       const response = await say({

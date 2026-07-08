@@ -17,10 +17,10 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 
 The app is designed to work even if external services fail:
 
-- Real-Time Search failure -> local `mockContext.json`
+- Real-Time Search failure -> live Slack channel scan when available -> local `mockContext.json`
 - Weather API failure -> local `mockWeather.json`
 - Flood API failure -> local `mockFlood.json`
-- LLM failure or missing key -> deterministic fallback planner
+- Planner currently runs deterministically; optional LLM mode is planned, and deterministic planning remains the fallback.
 
 ## Setup
 

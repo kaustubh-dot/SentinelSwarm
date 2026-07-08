@@ -19,5 +19,19 @@
     "zoneId": "zone-b",
     "status": "caution",
     "notes": "Passable but slow due to waterlogging near the bus depot."
+  },
+  {
+    "id": "r2-zone-a",
+    "name": "R2 via Canal Bridge",
+    "zoneId": "zone-a",
+    "status": "blocked",
+    "notes": "Default fallback status: bridge access may be blocked during canal overflow."
+  },
+  {
+    "id": "r4-zone-a",
+    "name": "R4 via East Bypass",
+    "zoneId": "zone-a",
+    "status": "open",
+    "notes": "Default fallback status: preferred access route for emergency vehicles to Zone A."
   }
 ]

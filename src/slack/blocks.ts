@@ -8,7 +8,12 @@ type RenderOptions = {
 const cap = (text: string, limit = 280): string => (text.length > limit ? `${text.slice(0, limit - 3)}...` : text);
 
 const statusLine = (plan: IncidentPlan): string => {
-  const context = plan.statuses.context === "rts" ? "Real-Time Search used" : "Fallback context used";
+  const context =
+    plan.statuses.context === "rts"
+      ? "Evidence source: Slack Real-Time Search"
+      : plan.statuses.context === "slack"
+        ? "Evidence source: Live Slack channel context"
+        : "Evidence source: Demo fallback context";
   const weather = plan.statuses.weather === "live" ? "Live weather" : "Mock weather";
   const flood = plan.statuses.flood === "live" ? "Live flood signal" : "Mock flood signal";
   const planner = plan.statuses.planner === "llm" ? "LLM planner" : "Deterministic planner";

@@ -11,7 +11,7 @@ describe("renderIncidentControlRoom", () => {
       zone,
       localData,
       evidence: loadMockContext(),
-      contextStatus: "mock",
+      contextStatus: "slack",
       weather: {
         precipitationMm: 8.4,
         signal: {
@@ -37,6 +37,7 @@ describe("renderIncidentControlRoom", () => {
 
     expect(rendered).toContain("Incident Control Room");
     expect(rendered).toContain("Evidence Ledger");
+    expect(rendered).toContain("Evidence source: Live Slack channel context");
     expect(rendered).toContain("Approve Plan");
     expect(rendered).toContain("Post to Coordination");
   });

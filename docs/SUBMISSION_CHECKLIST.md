@@ -12,7 +12,7 @@
 - Track: Slack Agent for Good.
 - Short tagline: Slack-native crisis coordination for floods, landslides, and local disaster response.
 - Feature description includes:
-  - Real-Time Search context retrieval.
+  - Real-Time Search integration with visible status, plus labeled Slack/mock fallback when RTS is unavailable.
   - Evidence-linked Incident Control Room.
   - Evidence Ledger with Slack source snippets.
   - Weather/flood risk signal.
@@ -56,7 +56,7 @@
 - Shows Real-Time Search API.
 - Shows local fallback context.
 - Shows Open-Meteo weather/flood tools and mock fallbacks.
-- Shows deterministic planner and optional LLM adapter.
+- Shows deterministic planner; include optional LLM adapter only if implemented.
 - Shows Zod validation.
 - Shows Block Kit UI.
 - Shows human approval and final coordination post.
@@ -97,10 +97,13 @@ Required:
 Optional:
 
 - `SLACK_SIGNING_SECRET`
-- `OPENAI_API_KEY`
-- `SENTINEL_USE_LLM`
 - `SENTINEL_FORCE_MOCKS`
 - `LOG_LEVEL`
+
+Only if an LLM adapter is implemented:
+
+- `OPENAI_API_KEY`
+- `SENTINEL_USE_LLM`
 
 Never commit real `.env` values.
 

@@ -14,5 +14,21 @@
     "capacity": 45,
     "availableSpaces": 0,
     "needs": ["overflow support"]
+  },
+  {
+    "id": "shelter-zone-a-1",
+    "name": "Hill School annex",
+    "zoneId": "zone-a",
+    "capacity": 100,
+    "availableSpaces": 80,
+    "needs": ["drinking water", "blankets", "intake volunteers"]
+  },
+  {
+    "id": "shelter-zone-a-2",
+    "name": "Ward 12 community room",
+    "zoneId": "zone-a",
+    "capacity": 35,
+    "availableSpaces": 12,
+    "needs": ["portable lights"]
   }
 ]

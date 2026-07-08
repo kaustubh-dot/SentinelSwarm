@@ -98,7 +98,7 @@ Deliver:
 - `action_token` extraction.
 - RTS status badge.
 - Evidence snippets from RTS results when available.
-- Graceful fallback to `mockContext.json`.
+- Graceful fallback through live Slack channel scan, then `mockContext.json`.
 
 Success test:
 

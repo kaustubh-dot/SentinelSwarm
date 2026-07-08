@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SourceModeSchema = z.enum(["rts", "mock", "local", "live", "deterministic", "llm", "unavailable"]);
+export const SourceModeSchema = z.enum(["rts", "slack", "mock", "local", "live", "deterministic", "llm", "unavailable"]);
 
 export const EvidenceSchema = z.object({
   id: z.string(),
@@ -9,7 +9,7 @@ export const EvidenceSchema = z.object({
   text: z.string(),
   permalink: z.string().optional(),
   confidence: z.number().min(0).max(1),
-  sourceType: z.enum(["rts", "mock", "local"])
+  sourceType: z.enum(["rts", "slack", "mock", "local"])
 });
 
 export const SeveritySchema = z.enum(["low", "moderate", "high", "critical"]);

@@ -43,6 +43,15 @@ See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/M
 ```bash
 npm test
 npm run build
+npm run smoke:slack
+```
+
+`npm run smoke:slack` checks Slack tokens, Socket Mode token validity, demo channel access, and `#coordination` setup without printing secrets.
+
+Use the opt-in write check only when you are comfortable posting a harmless test message to `#coordination`:
+
+```bash
+npm run smoke:slack -- --post-test
 ```
 
 ## MCP Stance

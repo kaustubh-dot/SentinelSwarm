@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const booleanFromEnv = (value: string | undefined, fallback: boolean): boolean => {
   if (value === undefined || value.trim() === "") {

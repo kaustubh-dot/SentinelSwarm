@@ -8,6 +8,7 @@
     "dev": "tsx src/app.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/app.js",
+    "smoke:slack": "tsx scripts/slack-smoke.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

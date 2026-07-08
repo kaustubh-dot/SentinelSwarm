@@ -93,8 +93,17 @@ SLACK_COORDINATION_CHANNEL_ID=C...
 Run:
 
 ```bash
+npm run smoke:slack
 npm run dev
 ```
+
+Optional write-path check:
+
+```bash
+npm run smoke:slack -- --post-test
+```
+
+This posts a harmless smoke-test message to the configured coordination channel.
 
 In Slack:
 

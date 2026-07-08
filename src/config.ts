@@ -16,9 +16,8 @@ const ConfigSchema = z.object({
   slackAppToken: z.string().min(1).startsWith("xapp-", "SLACK_APP_TOKEN must start with xapp-"),
   coordinationChannelId: z.string().optional(),
   useLlm: z.boolean(),
-  llmApiKey: z.string().optional(),
-  llmBaseUrl: z.string().url(),
-  llmModel: z.string().min(1),
+  googleApiKey: z.string().optional(),
+  geminiModel: z.string().min(1),
   forceMocks: z.boolean(),
   logLevel: z.enum(["debug", "info", "warn", "error"]).default("info")
 });
@@ -31,9 +30,8 @@ export const loadConfig = (): AppConfig => {
     slackAppToken: process.env.SLACK_APP_TOKEN,
     coordinationChannelId: process.env.SLACK_COORDINATION_CHANNEL_ID || undefined,
     useLlm: booleanFromEnv(process.env.SENTINEL_USE_LLM, false),
-    llmApiKey: process.env.OPENAI_API_KEY || undefined,
-    llmBaseUrl: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
-    llmModel: process.env.OPENAI_MODEL || "gpt-5.4-mini",
+    googleApiKey: process.env.GOOGLE_API_KEY || undefined,
+    geminiModel: process.env.GEMINI_MODEL || "gemini-3.5-flash",
     forceMocks: booleanFromEnv(process.env.SENTINEL_FORCE_MOCKS, false),
     logLevel: process.env.LOG_LEVEL || "info"
   });

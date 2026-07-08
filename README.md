@@ -20,7 +20,7 @@ The app is designed to work even if external services fail:
 - Real-Time Search failure -> live Slack channel scan when available -> local `mockContext.json`
 - Weather API failure -> local `mockWeather.json`
 - Flood API failure -> local `mockFlood.json`
-- LLM refinement is optional and off by default. If the API key is missing, the compatible API fails, or the LLM returns invalid JSON after one schema-repair retry, SentinelSwarm uses the deterministic fallback planner.
+- Gemini refinement is optional and off by default. If the API key is missing, Gemini fails, or the model returns invalid JSON after one schema-repair retry, SentinelSwarm uses the deterministic fallback planner.
 
 ## Setup
 
@@ -41,7 +41,7 @@ npm run dev
 
 See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/MANUAL_SETUP.md).
 
-## Optional LLM Refinement
+## Optional Gemini Refinement
 
 The live Slack demo does not require an LLM. Keep the main Zone B run focused on:
 
@@ -51,18 +51,17 @@ SENTINEL_USE_LLM=false
 @SentinelSwarm analyze Zone B risk
 ```
 
-To experiment with an OpenAI-compatible refinement layer after the deterministic demo works, set:
+To experiment with Gemini refinement after the deterministic demo works, set these only in your local ignored `.env` file:
 
 ```txt
 SENTINEL_USE_LLM=true
-OPENAI_API_KEY=...
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5.4-mini
+GOOGLE_API_KEY=...
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 This layer may polish or refine the structured plan, but it is never required for the demo. Missing credentials, API errors, timeouts, and invalid LLM JSON all fall back to the deterministic planner so approval and posting still work.
 
-Privacy note: enable LLM refinement only when your Slack demo data is fictional or you are allowed to send it to the configured provider. SentinelSwarm redacts raw Slack user IDs, channel IDs, permalinks, and URLs before the optional LLM call, but the report text is still included for planning context.
+Privacy note: enable Gemini refinement only when your Slack demo data is fictional or you are allowed to send it to Google. SentinelSwarm redacts raw Slack user IDs, channel IDs, permalinks, and URLs before the optional Gemini call, but the report text is still included for planning context. Never commit `GOOGLE_API_KEY`.
 
 ## Test
 

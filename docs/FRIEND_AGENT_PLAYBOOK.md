@@ -60,7 +60,7 @@ Never read, print, edit, commit, or ask for:
 SLACK_BOT_TOKEN
 SLACK_APP_TOKEN
 SLACK_SIGNING_SECRET
-OPENAI_API_KEY
+GOOGLE_API_KEY
 ```
 
 Do not change:
@@ -681,7 +681,7 @@ Also run a simple secret-pattern scan before committing:
 ```bash
 git grep -n "xoxb-" -- .
 git grep -n "xapp-" -- .
-git grep -n "OPENAI_API_KEY=" -- .
+git grep -n "GOOGLE_API_KEY=" -- .
 ```
 
 The only acceptable matches should be placeholders or explanatory docs, never real values.
@@ -735,4 +735,3 @@ The winning version of SentinelSwarm should feel like this:
 It is not a chatbot answering a disaster question.
 It is a Slack-native coordination room that turns scattered response chatter into a traceable, human-approved plan.
 ```
-

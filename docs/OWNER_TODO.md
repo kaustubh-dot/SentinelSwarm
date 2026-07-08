@@ -47,7 +47,7 @@ This checklist tracks the live Slack product path. Target the primary recording 
 - [ ] Evidence snippets come from real Slack messages.
 - [ ] Changing a route/shelter message changes the generated plan.
 - [ ] Mock fallback is tested separately.
-- [ ] Missing `OPENAI_API_KEY`, API failure, or invalid LLM JSON does not block approval or posting.
+- [ ] Missing `GOOGLE_API_KEY`, Gemini API failure, or invalid LLM JSON does not block approval or posting.
 
 ## Demo Recording
 

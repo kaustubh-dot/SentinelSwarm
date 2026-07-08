@@ -42,9 +42,8 @@ const makeConfig = (overrides: Partial<AppConfig> = {}): AppConfig => ({
   slackAppToken: "xapp-test",
   coordinationChannelId: "C123",
   useLlm: false,
-  llmApiKey: undefined,
-  llmBaseUrl: "https://api.openai.com/v1",
-  llmModel: "gpt-5.4-mini",
+  googleApiKey: undefined,
+  geminiModel: "gemini-3.5-flash",
   forceMocks: true,
   logLevel: "info",
   ...overrides
@@ -73,7 +72,7 @@ describe("createIncidentPlan", () => {
     const result = await createIncidentPlan(makeInput(), makeConfig({ useLlm: true }));
 
     expect(result.mode).toBe("deterministic");
-    expect(result.reason).toContain("OPENAI_API_KEY");
+    expect(result.reason).toContain("GOOGLE_API_KEY");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
@@ -95,12 +94,12 @@ describe("refinePlanWithLlm", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ choices: [{ message: { content: "not json" } }] }), {
+        new Response(JSON.stringify({ output_text: "not json" }), {
           status: 200
         })
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(patch) } }] }), {
+        new Response(JSON.stringify({ output_text: JSON.stringify(patch) }), {
           status: 200
         })
       );
@@ -109,7 +108,7 @@ describe("refinePlanWithLlm", () => {
     const result = await refinePlanWithLlm(
       makeConfig({
         useLlm: true,
-        llmApiKey: "test-key"
+        googleApiKey: "test-key"
       }),
       input,
       deterministicPlan
@@ -120,13 +119,19 @@ describe("refinePlanWithLlm", () => {
     expect(result.plan.summary).toContain("LLM refined");
     expect(result.plan.evidence).toEqual(deterministicPlan.evidence);
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const [url, request] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const headers = request.headers as Record<string, string>;
+    const body = JSON.parse(String(request.body)) as { model: string };
+    expect(url).toBe("https://generativelanguage.googleapis.com/v1beta/interactions");
+    expect(headers["x-goog-api-key"]).toBe("test-key");
+    expect(body.model).toBe("gemini-3.5-flash");
   });
 
   it("falls back when both LLM attempts fail validation", async () => {
     const input = makeInput();
     const deterministicPlan = createFallbackPlan(input);
     const fetchSpy = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ summary: "missing required fields" }) } }] }), {
+      new Response(JSON.stringify({ output_text: JSON.stringify({ summary: "missing required fields" }) }), {
         status: 200
       })
     );
@@ -135,7 +140,7 @@ describe("refinePlanWithLlm", () => {
     const result = await refinePlanWithLlm(
       makeConfig({
         useLlm: true,
-        llmApiKey: "test-key"
+        googleApiKey: "test-key"
       }),
       input,
       deterministicPlan

@@ -24,7 +24,7 @@ const LlmPlanPatchSchema = z.object({
 
 type LlmPlanPatch = z.infer<typeof LlmPlanPatchSchema>;
 
-export type LlmPlannerConfig = Pick<AppConfig, "useLlm" | "llmApiKey" | "llmBaseUrl" | "llmModel">;
+export type LlmPlannerConfig = Pick<AppConfig, "useLlm" | "googleApiKey" | "geminiModel">;
 
 export type LlmRefinementResult = {
   plan: IncidentPlan;
@@ -54,36 +54,50 @@ const parseJsonObject = (content: string): unknown => {
   }
 };
 
-const callOpenAiCompatiblePlanner = async (
+const geminiText = (payload: unknown): string | undefined => {
+  if (typeof payload !== "object" || payload === null) {
+    return undefined;
+  }
+
+  const response = payload as {
+    output_text?: string;
+    outputText?: string;
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  return (
+    response.output_text ??
+    response.outputText ??
+    response.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text)
+      .filter((text): text is string => Boolean(text))
+      .join("")
+  );
+};
+
+const callGeminiPlanner = async (
   config: LlmPlannerConfig,
   input: PlannerInput,
   deterministicPlan: IncidentPlan,
   repairHint?: string
 ): Promise<LlmPlanPatch> => {
-  const url = new URL("chat/completions", config.llmBaseUrl.endsWith("/") ? config.llmBaseUrl : `${config.llmBaseUrl}/`);
   const prompt = buildPlannerRefinementPrompt(input, deterministicPlan, repairHint);
   const response = await timeoutFetch(
-    url.toString(),
+    "https://generativelanguage.googleapis.com/v1beta/interactions",
     {
       method: "POST",
       headers: {
-        authorization: `Bearer ${config.llmApiKey}`,
+        "x-goog-api-key": config.googleApiKey ?? "",
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: config.llmModel,
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "You are SentinelSwarm's emergency coordination planning assistant. Return strict JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ]
+        model: config.geminiModel,
+        system_instruction: "You are SentinelSwarm's emergency coordination planning assistant. Return strict JSON only.",
+        input: prompt,
+        generation_config: {
+          temperature: 0.2,
+          response_mime_type: "application/json"
+        }
       })
     },
     6000
@@ -93,8 +107,8 @@ const callOpenAiCompatiblePlanner = async (
     throw new Error(`LLM API returned ${response.status}`);
   }
 
-  const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = payload.choices?.[0]?.message?.content;
+  const payload = await response.json();
+  const content = geminiText(payload);
   if (!content) {
     throw new Error("LLM response did not include message content");
   }
@@ -127,16 +141,16 @@ export const refinePlanWithLlm = async (
     };
   }
 
-  if (!config.llmApiKey) {
+  if (!config.googleApiKey) {
     return {
       plan: deterministicPlan,
       usedLlm: false,
-      reason: "OPENAI_API_KEY is not set"
+      reason: "GOOGLE_API_KEY is not set"
     };
   }
 
   try {
-    const patch = await callOpenAiCompatiblePlanner(config, input, deterministicPlan);
+    const patch = await callGeminiPlanner(config, input, deterministicPlan);
     return {
       plan: mergePatch(deterministicPlan, patch),
       usedLlm: true
@@ -144,7 +158,7 @@ export const refinePlanWithLlm = async (
   } catch (firstError) {
     try {
       const repairHint = firstError instanceof Error ? firstError.message : "invalid LLM response";
-      const patch = await callOpenAiCompatiblePlanner(config, input, deterministicPlan, repairHint);
+      const patch = await callGeminiPlanner(config, input, deterministicPlan, repairHint);
       return {
         plan: mergePatch(deterministicPlan, patch),
         usedLlm: true

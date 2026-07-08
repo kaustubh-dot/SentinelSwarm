@@ -151,7 +151,7 @@ Fresh viewer understands the problem, Slack-native solution, RTS usage, and soci
 
 Add only after the deterministic planner works end to end.
 
-The app must run without `OPENAI_API_KEY`.
+The app must run without `GOOGLE_API_KEY`.
 
 ### Optional MCP Server
 

@@ -33,7 +33,7 @@ flowchart LR
   MockFlood --> Planner
 
   Planner --> Fallback["Deterministic Fallback Planner"]
-  Planner --> LLM["Optional OpenAI-Compatible LLM Refinement"]
+  Planner --> LLM["Optional Gemini Refinement"]
   LLM -->|valid JSON after schema check| Schema["Zod Plan Schema"]
   LLM -->|missing key, API failure, invalid schema| Fallback
   Fallback --> Schema
@@ -57,7 +57,7 @@ flowchart LR
 8. Weather and flood tools fetch live data with short timeouts.
 9. Mock weather/flood data replaces failed calls.
 10. Planner creates a structured `IncidentPlan`. By default this is deterministic.
-11. If `SENTINEL_USE_LLM=true`, the optional OpenAI-compatible layer may refine the plan.
+11. If `SENTINEL_USE_LLM=true`, the optional Gemini layer may refine the plan.
 12. Zod validates the plan. Invalid LLM JSON is retried once for schema repair, then replaced by the deterministic fallback plan.
 13. Block renderer creates a Slack Incident Control Room.
 14. User approves the plan.
@@ -140,7 +140,7 @@ flowchart TD
 - `src/planner/schema.ts`: Zod schemas.
 - `src/planner/severity.ts`: severity scoring.
 - `src/planner/fallbackPlanner.ts`: deterministic planner.
-- `src/planner/llm.ts`: optional LLM adapter.
+- `src/planner/llm.ts`: optional Gemini adapter.
 
 ## Environment Variables
 
@@ -150,15 +150,14 @@ flowchart TD
 - `SLACK_COORDINATION_CHANNEL_ID`: channel ID for final approved posts.
 - `SENTINEL_FORCE_MOCKS`: set `false` for the live Zone B Slack demo; set `true` only for fallback rehearsal.
 - `SENTINEL_USE_LLM`: optional feature flag. Keep `false` for the required demo path.
-- `OPENAI_API_KEY`: optional API key for the refinement layer. The app must run without it.
-- `OPENAI_BASE_URL`: optional OpenAI-compatible base URL, for example `https://api.openai.com/v1`.
-- `OPENAI_MODEL`: optional OpenAI-compatible model name.
+- `GOOGLE_API_KEY`: optional Gemini API key for the refinement layer. The app must run without it.
+- `GEMINI_MODEL`: optional Gemini model name. Defaults to `gemini-3.5-flash`.
 - `LOG_LEVEL`: app logging level.
 
-## Optional LLM Refinement Contract
+## Optional Gemini Refinement Contract
 
-The LLM layer is a refinement path, not a dependency. The required demo must still work with `SENTINEL_USE_LLM=false` and no `OPENAI_API_KEY`.
+The Gemini layer is a refinement path, not a dependency. The required demo must still work with `SENTINEL_USE_LLM=false` and no `GOOGLE_API_KEY`.
 
-When enabled, the adapter should call an OpenAI-compatible chat/completions API using `OPENAI_BASE_URL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`, then validate the returned structured plan with Zod. If the key is missing, the provider is unreachable, the response times out, or the JSON fails schema validation after one repair retry, the planner must use the deterministic fallback planner and label that status in the Block Kit card.
+When enabled, the adapter calls the Gemini API using `GOOGLE_API_KEY` and `GEMINI_MODEL`, then validates the returned structured plan with Zod. If the key is missing, Gemini is unreachable, the response times out, or the JSON fails schema validation after one repair retry, the planner must use the deterministic fallback planner and label that status in the Block Kit card.
 
-Privacy contract: the optional LLM call redacts raw Slack user IDs, channel IDs, permalinks, and URLs before sending planning context to the configured provider. The feature should remain disabled unless Slack reports are fictional or approved for that provider, because the report text itself is still sent.
+Privacy contract: the optional Gemini call redacts raw Slack user IDs, channel IDs, permalinks, and URLs before sending planning context to Google. The feature should remain disabled unless Slack reports are fictional or approved for Google, because the report text itself is still sent.

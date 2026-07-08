@@ -176,7 +176,7 @@ Acceptance criteria:
 - Add `src/planner/llm.ts`.
 - Add `src/planner/prompt.ts`.
 - Make LLM opt-in through `SENTINEL_USE_LLM=true`.
-- Support OpenAI-compatible configuration through `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL`.
+- Support Gemini configuration through `GOOGLE_API_KEY` and `GEMINI_MODEL`.
 - Validate LLM output with Zod.
 - Retry once for schema repair.
 - Fall back to deterministic planner.
@@ -184,8 +184,8 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- App works without `OPENAI_API_KEY`.
-- App works when `SENTINEL_USE_LLM=false`, even if all OpenAI-compatible variables are empty.
+- App works without `GOOGLE_API_KEY`.
+- App works when `SENTINEL_USE_LLM=false`, even if all Gemini variables are empty.
 - API failures, timeouts, and provider errors cannot block the demo.
 - Invalid LLM output cannot break the demo.
 - Invalid LLM JSON triggers one schema-repair retry, then falls back to deterministic planning.

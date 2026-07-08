@@ -85,7 +85,7 @@ You will manually fill:
 - `SLACK_APP_TOKEN`
 - `SLACK_COORDINATION_CHANNEL_ID`
 - `SLACK_SIGNING_SECRET` if used
-- `OPENAI_API_KEY` only if optional LLM mode is enabled
+- `GOOGLE_API_KEY` only if optional Gemini refinement is enabled
 
 Never commit `.env`.
 

@@ -102,7 +102,7 @@ Optional:
 
 Only if an LLM adapter is implemented:
 
-- `OPENAI_API_KEY`
+- `GOOGLE_API_KEY`
 - `SENTINEL_USE_LLM`
 
 Never commit real `.env` values.

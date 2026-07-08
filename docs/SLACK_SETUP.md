@@ -97,18 +97,17 @@ SENTINEL_USE_LLM=false
 
 Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
 
-Optional LLM refinement can be enabled after the live Zone B flow is stable:
+Optional Gemini refinement can be enabled after the live Zone B flow is stable. Put the real key only in your local ignored `.env` file:
 
 ```txt
 SENTINEL_USE_LLM=true
-OPENAI_API_KEY=...
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5.4-mini
+GOOGLE_API_KEY=...
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
-Do not make this part of the required demo path. If the key is missing, the OpenAI-compatible API fails, or the response does not match the Zod plan schema after one repair attempt, SentinelSwarm must continue with the deterministic fallback planner.
+Do not make this part of the required demo path. If the key is missing, Gemini fails, or the response does not match the Zod plan schema after one repair attempt, SentinelSwarm must continue with the deterministic fallback planner.
 
-Privacy note: only enable LLM refinement when the Slack reports are fictional or approved for the configured provider. The app redacts raw Slack user IDs, channel IDs, permalinks, and URLs before optional LLM calls, but report text is still sent for planning context.
+Privacy note: only enable Gemini refinement when the Slack reports are fictional or approved for Google. The app redacts raw Slack user IDs, channel IDs, permalinks, and URLs before optional Gemini calls, but report text is still sent for planning context. Never commit `GOOGLE_API_KEY`.
 
 ## 6. First Smoke Test
 
@@ -196,12 +195,12 @@ Important:
 - Confirm the app mention payload contains `action_token`.
 - Keep going: SentinelSwarm tries live Slack channel scan next, then mock context, and labels the evidence source in the card.
 
-### LLM Refinement Falls Back
+### Gemini Refinement Falls Back
 
-- Confirm `SENTINEL_USE_LLM=true` only when intentionally testing LLM refinement.
-- Confirm `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` are set for the compatible provider.
+- Confirm `SENTINEL_USE_LLM=true` only when intentionally testing Gemini refinement.
+- Confirm `GOOGLE_API_KEY` and `GEMINI_MODEL` are set in local `.env`.
 - Keep going: the required Slack demo does not depend on the LLM. Missing keys, API failures, and invalid schema output fall back to the deterministic planner.
-- For privacy, keep `SENTINEL_USE_LLM=false` unless demo Slack reports are fictional or approved for the configured provider.
+- For privacy, keep `SENTINEL_USE_LLM=false` unless demo Slack reports are fictional or approved for Google.
 
 ### Should I Connect Slack As MCP?
 

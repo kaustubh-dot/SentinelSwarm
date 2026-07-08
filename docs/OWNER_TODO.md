@@ -7,6 +7,7 @@ Use this as the live owner checklist. It intentionally includes work that is not
 - [x] `npm.cmd run typecheck` passes.
 - [x] `npm.cmd test` passes.
 - [x] `npm.cmd run build` passes.
+- [x] `npm.cmd run check:secrets` passes.
 - [ ] `npm.cmd run smoke:slack` passes with live Slack credentials.
 - [ ] Optional write smoke test posts a harmless message to `#coordination`.
 - [ ] `npm.cmd run seed:slack` previews the seed plan.

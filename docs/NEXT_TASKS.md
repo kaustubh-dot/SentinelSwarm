@@ -13,6 +13,8 @@ This file tracks the immediate work that remains before recording and submission
 - Deterministic planner exists; optional Gemini refinement is guarded by fallbacks.
 - Approval, post to coordination, and handover button handlers exist.
 - Unit tests, typecheck, and build currently pass.
+- Handler edge-case tests cover pre-approval posting, missing coordination channel setup hint, and handover threading.
+- A tracked-file no-secrets check exists: `npm.cmd run check:secrets`.
 
 ## Immediate Manual Tasks
 
@@ -52,10 +54,7 @@ Generate Handover
 
 ## Coding Tasks Still Worth Doing
 
-- Add a narrow test for missing `SLACK_COORDINATION_CHANNEL_ID` returning the readable setup hint.
-- Add a narrow test for `generate_handover` posting into the original thread.
-- Add a small no-secrets check script before submission.
-- Consider a single end-to-end mocked handler test for app mention -> plan store -> button actions.
+- Optional: add one mocked end-to-end test for app mention -> plan store -> button actions if there is time after live rehearsal.
 - Review Slack Block Kit payload sizes after any future LLM prompt or schema changes.
 
 ## Do Not Add Before Recording

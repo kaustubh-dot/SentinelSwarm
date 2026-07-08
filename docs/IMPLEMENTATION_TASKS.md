@@ -67,15 +67,12 @@ This is the engineering task ledger. Keep completed work visible, but keep the r
   - Block Kit shape and size guard
   - post plan formatting
   - plan store
+  - Slack button edge cases
+  - no-secrets scanner
+- Safety scripts:
+  - tracked-file no-secrets check
 
 ## Remaining Implementation Work
-
-### Slack Handler Tests
-
-- Add test coverage for missing `SLACK_COORDINATION_CHANNEL_ID`.
-- Add test coverage for attempting `post_plan` before approval.
-- Add test coverage for missing stored plan ID on each button action.
-- Add test coverage for `generate_handover` thread behavior.
 
 ### Demo Robustness
 
@@ -92,6 +89,7 @@ This is the engineering task ledger. Keep completed work visible, but keep the r
 - Trim any Slack section that looks too dense during the live demo.
 - Add final no-secrets checklist before commit/submission.
 - Update Devpost draft after recording.
+- Optional: add one mocked end-to-end app mention/button flow test after live rehearsal.
 
 ### Submission
 

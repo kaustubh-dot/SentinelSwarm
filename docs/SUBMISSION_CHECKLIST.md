@@ -119,6 +119,7 @@ Run these before recording and before submission:
 
 - `npm run build`
 - `npm test`
+- `npm run check:secrets`
 - Start app in Socket Mode.
 - Seed Slack with `npm.cmd run seed:slack -- --post` or manually paste `docs/DEMO_SEED_MESSAGES.md`.
 - In Slack, run `@SentinelSwarm ping`.

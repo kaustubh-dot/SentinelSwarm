@@ -112,6 +112,7 @@ On Windows PowerShell, prefer the `.cmd` forms if script execution policy blocks
 
 ```powershell
 npm.cmd test
+npm.cmd run check:secrets
 npm.cmd run build
 npm.cmd run seed:slack
 npm.cmd run smoke:slack

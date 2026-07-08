@@ -1,0 +1,23 @@
+[
+  {
+    "id": "r2",
+    "name": "R2 via Riverside Lane",
+    "zoneId": "zone-b",
+    "status": "blocked",
+    "notes": "Blocked by debris and standing water for the next 4 hours."
+  },
+  {
+    "id": "r4",
+    "name": "R4 via Hill School Road",
+    "zoneId": "zone-b",
+    "status": "open",
+    "notes": "Best current access for light vehicles to Hill School shelter."
+  },
+  {
+    "id": "r6",
+    "name": "R6 via Market Road",
+    "zoneId": "zone-b",
+    "status": "caution",
+    "notes": "Passable but slow due to waterlogging near the bus depot."
+  }
+]

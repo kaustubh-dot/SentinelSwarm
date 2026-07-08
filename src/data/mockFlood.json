@@ -1,0 +1,14 @@
+[
+  {
+    "zoneId": "zone-b",
+    "source": "mock",
+    "floodRiskIndex": 0.92,
+    "summary": "Mock flood signal: nearby drainage channels are near high-risk threshold for Zone B."
+  },
+  {
+    "zoneId": "zone-a",
+    "source": "mock",
+    "floodRiskIndex": 0.35,
+    "summary": "Mock flood signal: Zone A remains below flood escalation threshold."
+  }
+]

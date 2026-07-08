@@ -1,0 +1,154 @@
+import type { IncidentPlan } from "../planner/schema";
+
+type RenderOptions = {
+  state?: "draft" | "approved" | "posted";
+  approvedBy?: string;
+};
+
+const cap = (text: string, limit = 280): string => (text.length > limit ? `${text.slice(0, limit - 3)}...` : text);
+
+const statusLine = (plan: IncidentPlan): string => {
+  const context = plan.statuses.context === "rts" ? "Real-Time Search used" : "Fallback context used";
+  const weather = plan.statuses.weather === "live" ? "Live weather" : "Mock weather";
+  const flood = plan.statuses.flood === "live" ? "Live flood signal" : "Mock flood signal";
+  const planner = plan.statuses.planner === "llm" ? "LLM planner" : "Deterministic planner";
+  return `${context} | ${weather} | ${flood} | ${planner}`;
+};
+
+export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOptions = {}): any[] => {
+  const stateText =
+    options.state === "approved"
+      ? `Approved by ${options.approvedBy ?? "coordinator"}`
+      : options.state === "posted"
+        ? "Posted to #coordination"
+        : "Awaiting human approval";
+
+  const evidenceText = plan.evidence
+    .slice(0, 4)
+    .map((item, index) => {
+      const source = item.permalink ? `<${item.permalink}|${item.channel}>` : item.channel;
+      return `${index + 1}. ${source}: ${cap(item.text, 160)}`;
+    })
+    .join("\n");
+
+  const incidentsText = plan.incidents
+    .map((incident) => `*${incident.severity.toUpperCase()}* ${incident.title}: ${incident.summary}`)
+    .join("\n");
+
+  const routeText = plan.routeActions
+    .slice(0, 4)
+    .map((route) => `*${route.status.toUpperCase()}* ${route.routeName}: ${route.recommendation}`)
+    .join("\n");
+
+  const resourcesText = plan.resourceMatches
+    .slice(0, 6)
+    .map((match) => `*${match.type}* ${match.name}: ${cap(match.recommendation, 160)}`)
+    .join("\n");
+
+  const actionsText = plan.recommendedActions.map((action, index) => `${index + 1}. ${action}`).join("\n");
+
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `Incident Control Room: ${plan.zoneName}`,
+        emoji: false
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Severity:* ${plan.severity.toUpperCase()} | *Confidence:* ${Math.round(plan.confidence * 100)}%\n*Status:* ${stateText}\n${statusLine(plan)}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Risk Summary*\n${plan.summary}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Evidence Ledger*\n${evidenceText || "No evidence found. Use fallback seeded context before demo."}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Priority Incident*\n${incidentsText}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Routes*\n${routeText}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Resource Matches*\n${resourcesText}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Recommended Plan*\n${actionsText}`
+      }
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Decision support only. A human coordinator must approve before assignments are posted."
+        }
+      ]
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Approve Plan",
+            emoji: false
+          },
+          style: "primary",
+          action_id: "approve_plan",
+          value: plan.planId
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Post to Coordination",
+            emoji: false
+          },
+          action_id: "post_plan",
+          value: plan.planId
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Generate Handover",
+            emoji: false
+          },
+          action_id: "generate_handover",
+          value: plan.planId
+        }
+      ]
+    }
+  ];
+};

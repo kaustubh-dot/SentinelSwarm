@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ctx-1",
+    "source": "Seeded Slack report",
+    "channel": "#field-reports",
+    "text": "Zone B update: water is rising near Riverside Lane. Two homes requesting evacuation support. Elderly residents present.",
+    "permalink": "https://example.slack.com/archives/field-reports/p1",
+    "confidence": 0.86,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-2",
+    "source": "Seeded Slack report",
+    "channel": "#routes",
+    "text": "Route R2 through Riverside Lane is blocked by debris and standing water. Avoid for the next 4 hours.",
+    "permalink": "https://example.slack.com/archives/routes/p2",
+    "confidence": 0.9,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-3",
+    "source": "Seeded Slack report",
+    "channel": "#shelters",
+    "text": "Hill School shelter has 18 spaces, blankets available, needs drinking water by evening for Zone B evacuees.",
+    "permalink": "https://example.slack.com/archives/shelters/p3",
+    "confidence": 0.84,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-4",
+    "source": "Seeded Slack report",
+    "channel": "#volunteers",
+    "text": "Anika and Dev are available with a 4x4 from 5pm to 9pm for Zone B support. First-aid trained.",
+    "permalink": "https://example.slack.com/archives/volunteers/p4",
+    "confidence": 0.82,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-5",
+    "source": "Seeded Slack report",
+    "channel": "#supplies",
+    "text": "Depot has 40 water cans, 25 blankets, 12 first-aid kits. Driver available if Zone B route is confirmed.",
+    "permalink": "https://example.slack.com/archives/supplies/p5",
+    "confidence": 0.83,
+    "sourceType": "mock"
+  }
+]

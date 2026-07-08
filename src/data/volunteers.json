@@ -1,0 +1,34 @@
+[
+  {
+    "id": "vol-1",
+    "name": "Anika",
+    "skills": ["first-aid", "4x4 driving", "field checks"],
+    "availability": "5pm-9pm",
+    "zonePreference": "zone-b",
+    "transport": "4x4"
+  },
+  {
+    "id": "vol-2",
+    "name": "Dev",
+    "skills": ["evacuation support", "radio coordination"],
+    "availability": "5pm-9pm",
+    "zonePreference": "zone-b",
+    "transport": "4x4"
+  },
+  {
+    "id": "vol-3",
+    "name": "Maya",
+    "skills": ["phone check-ins", "family tracing"],
+    "availability": "next 3 hours",
+    "zonePreference": "zone-b",
+    "transport": "remote"
+  },
+  {
+    "id": "vol-4",
+    "name": "Rohan",
+    "skills": ["supply loading", "shelter intake"],
+    "availability": "6pm-10pm",
+    "zonePreference": "any",
+    "transport": "van"
+  }
+]

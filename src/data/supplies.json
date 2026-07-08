@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sup-1",
+    "name": "water cans",
+    "quantity": 40,
+    "unit": "cans",
+    "location": "Main depot"
+  },
+  {
+    "id": "sup-2",
+    "name": "blankets",
+    "quantity": 25,
+    "unit": "blankets",
+    "location": "Main depot"
+  },
+  {
+    "id": "sup-3",
+    "name": "first-aid kits",
+    "quantity": 12,
+    "unit": "kits",
+    "location": "Main depot"
+  },
+  {
+    "id": "sup-4",
+    "name": "portable lights",
+    "quantity": 3,
+    "unit": "units",
+    "location": "Field locker"
+  }
+]

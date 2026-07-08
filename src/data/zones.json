@@ -1,0 +1,25 @@
+[
+  {
+    "id": "zone-b",
+    "name": "Zone B",
+    "label": "Riverside Zone B",
+    "latitude": 19.076,
+    "longitude": 72.8777,
+    "riskNotes": [
+      "Low-lying riverside corridor",
+      "Known drainage overflow during heavy monsoon rain",
+      "Primary access depends on Riverside Lane and Hill School Road"
+    ]
+  },
+  {
+    "id": "zone-a",
+    "name": "Zone A",
+    "label": "Uptown Zone A",
+    "latitude": 19.082,
+    "longitude": 72.89,
+    "riskNotes": [
+      "Higher ground",
+      "Secondary shelter support area"
+    ]
+  }
+]

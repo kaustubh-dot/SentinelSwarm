@@ -1,0 +1,14 @@
+[
+  {
+    "zoneId": "zone-b",
+    "source": "mock",
+    "precipitationMm": 8.4,
+    "summary": "Mock weather signal: heavy rain expected this evening, with peak hourly precipitation near 8.4 mm."
+  },
+  {
+    "zoneId": "zone-a",
+    "source": "mock",
+    "precipitationMm": 3.1,
+    "summary": "Mock weather signal: moderate rain expected, but Zone A remains lower priority."
+  }
+]

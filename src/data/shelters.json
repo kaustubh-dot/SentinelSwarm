@@ -1,0 +1,18 @@
+[
+  {
+    "id": "shelter-1",
+    "name": "Hill School shelter",
+    "zoneId": "zone-b",
+    "capacity": 60,
+    "availableSpaces": 18,
+    "needs": ["drinking water", "blankets"]
+  },
+  {
+    "id": "shelter-2",
+    "name": "Community Hall shelter",
+    "zoneId": "zone-b",
+    "capacity": 45,
+    "availableSpaces": 0,
+    "needs": ["overflow support"]
+  }
+]

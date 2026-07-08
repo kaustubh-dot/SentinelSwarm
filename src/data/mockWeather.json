@@ -8,7 +8,7 @@
   {
     "zoneId": "zone-a",
     "source": "mock",
-    "precipitationMm": 3.1,
-    "summary": "Mock weather signal: moderate rain expected, but Zone A remains lower priority."
+    "precipitationMm": 9.1,
+    "summary": "Mock weather signal: rainfall intensity is increasing near Zone A for the next 90 minutes."
   }
 ]

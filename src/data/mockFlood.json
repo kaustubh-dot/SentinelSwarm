@@ -8,7 +8,7 @@
   {
     "zoneId": "zone-a",
     "source": "mock",
-    "floodRiskIndex": 0.35,
-    "summary": "Mock flood signal: Zone A remains below flood escalation threshold."
+    "floodRiskIndex": 0.78,
+    "summary": "Mock flood signal: canal-side lanes in Zone A are at elevated overflow risk."
   }
 ]

@@ -2,6 +2,7 @@
   {
     "id": "sup-1",
     "name": "water cans",
+    "zoneId": "zone-b",
     "quantity": 40,
     "unit": "cans",
     "location": "Main depot"
@@ -9,6 +10,7 @@
   {
     "id": "sup-2",
     "name": "blankets",
+    "zoneId": "zone-b",
     "quantity": 25,
     "unit": "blankets",
     "location": "Main depot"
@@ -16,6 +18,7 @@
   {
     "id": "sup-3",
     "name": "first-aid kits",
+    "zoneId": "zone-b",
     "quantity": 12,
     "unit": "kits",
     "location": "Main depot"
@@ -23,8 +26,41 @@
   {
     "id": "sup-4",
     "name": "portable lights",
+    "zoneId": "zone-b",
     "quantity": 3,
     "unit": "units",
     "location": "Field locker"
+  },
+  {
+    "id": "sup-zone-a-1",
+    "name": "water bottles",
+    "zoneId": "zone-a",
+    "quantity": 120,
+    "unit": "bottles",
+    "location": "Ward 12 storage"
+  },
+  {
+    "id": "sup-zone-a-2",
+    "name": "blankets",
+    "zoneId": "zone-a",
+    "quantity": 45,
+    "unit": "blankets",
+    "location": "Ward 12 storage"
+  },
+  {
+    "id": "sup-zone-a-3",
+    "name": "first-aid kits",
+    "zoneId": "zone-a",
+    "quantity": 18,
+    "unit": "kits",
+    "location": "Ward 12 storage"
+  },
+  {
+    "id": "sup-zone-a-4",
+    "name": "portable lights",
+    "zoneId": "zone-a",
+    "quantity": 6,
+    "unit": "units",
+    "location": "Ward 12 storage"
   }
 ]

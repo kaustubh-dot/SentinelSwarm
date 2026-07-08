@@ -14,5 +14,21 @@
     "capacity": 45,
     "availableSpaces": 0,
     "needs": ["overflow support"]
+  },
+  {
+    "id": "shelter-zone-a-1",
+    "name": "Shelter S1 at Hill School",
+    "zoneId": "zone-a",
+    "capacity": 120,
+    "availableSpaces": 80,
+    "needs": ["registration support", "portable lights"]
+  },
+  {
+    "id": "shelter-zone-a-2",
+    "name": "Shelter S2",
+    "zoneId": "zone-a",
+    "capacity": 50,
+    "availableSpaces": 0,
+    "needs": ["morning capacity review"]
   }
 ]

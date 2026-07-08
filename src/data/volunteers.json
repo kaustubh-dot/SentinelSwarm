@@ -30,5 +30,29 @@
     "availability": "6pm-10pm",
     "zonePreference": "any",
     "transport": "van"
+  },
+  {
+    "id": "vol-zone-a-1",
+    "name": "Isha",
+    "skills": ["first-aid", "evacuation support", "field checks"],
+    "availability": "next 4 hours",
+    "zonePreference": "zone-a",
+    "transport": "pickup"
+  },
+  {
+    "id": "vol-zone-a-2",
+    "name": "Kabir",
+    "skills": ["4x4 driving", "supply transport"],
+    "availability": "6pm-10pm",
+    "zonePreference": "zone-a",
+    "transport": "pickup"
+  },
+  {
+    "id": "vol-zone-a-3",
+    "name": "Meera",
+    "skills": ["phone check-ins", "elder support"],
+    "availability": "next 3 hours",
+    "zonePreference": "zone-a",
+    "transport": "remote"
   }
 ]

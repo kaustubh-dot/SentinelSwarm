@@ -43,5 +43,50 @@
     "permalink": "https://example.slack.com/archives/supplies/p5",
     "confidence": 0.83,
     "sourceType": "mock"
+  },
+  {
+    "id": "ctx-zone-a-1",
+    "source": "Seeded Slack report",
+    "channel": "#field-reports",
+    "text": "Zone A field update: water rising near Canal Road. 25 residents need evacuation support, including elderly residents and two children. Bridge access is blocked.",
+    "permalink": "https://example.slack.com/archives/field-reports/p6",
+    "confidence": 0.88,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-zone-a-2",
+    "source": "Seeded Slack report",
+    "channel": "#routes",
+    "text": "Route R2 over Canal Bridge is blocked by overflow and debris. Route R4 via East Bypass is open for emergency vehicles to Zone A.",
+    "permalink": "https://example.slack.com/archives/routes/p7",
+    "confidence": 0.9,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-zone-a-3",
+    "source": "Seeded Slack report",
+    "channel": "#shelters",
+    "text": "Shelter S1 at Hill School has 80 free beds, generator backup, and drinking water for tonight for Zone A families. Shelter S2 is full.",
+    "permalink": "https://example.slack.com/archives/shelters/p8",
+    "confidence": 0.85,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-zone-a-4",
+    "source": "Seeded Slack report",
+    "channel": "#volunteers",
+    "text": "8 trained volunteers are available near Zone A. 3 have first-aid training, 2 have pickup vehicles, and 1 can coordinate phone check-ins.",
+    "permalink": "https://example.slack.com/archives/volunteers/p9",
+    "confidence": 0.84,
+    "sourceType": "mock"
+  },
+  {
+    "id": "ctx-zone-a-5",
+    "source": "Seeded Slack report",
+    "channel": "#supplies",
+    "text": "Ward 12 storage has 120 water bottles, 45 blankets, 18 first-aid kits, and 6 portable lights ready for Zone A dispatch.",
+    "permalink": "https://example.slack.com/archives/supplies/p10",
+    "confidence": 0.83,
+    "sourceType": "mock"
   }
 ]

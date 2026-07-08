@@ -19,5 +19,26 @@
     "zoneId": "zone-b",
     "status": "caution",
     "notes": "Passable but slow due to waterlogging near the bus depot."
+  },
+  {
+    "id": "r2-zone-a",
+    "name": "R2 over Canal Bridge",
+    "zoneId": "zone-a",
+    "status": "blocked",
+    "notes": "Blocked by overflow and debris near Canal Road."
+  },
+  {
+    "id": "r4-zone-a",
+    "name": "R4 via East Bypass",
+    "zoneId": "zone-a",
+    "status": "open",
+    "notes": "Open for emergency vehicles with an estimated 18 minute travel time to Zone A."
+  },
+  {
+    "id": "market-lane-zone-a",
+    "name": "Market Lane footpath",
+    "zoneId": "zone-a",
+    "status": "caution",
+    "notes": "Passable on foot only and not recommended for vehicle movement after sunset."
   }
 ]

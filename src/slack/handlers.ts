@@ -40,6 +40,18 @@ const userLabel = (body: any): string => {
   return body.user?.username ?? body.user?.name ?? body.user?.id ?? "coordinator";
 };
 
+const actionChannelId = (body: any, fallback?: string): string | undefined => {
+  return body.container?.channel_id ?? body.channel?.id ?? fallback;
+};
+
+const actionMessageTs = (body: any, fallback?: string): string | undefined => {
+  return body.container?.message_ts ?? body.message?.ts ?? fallback;
+};
+
+const actionThreadTs = (body: any, fallback?: string): string | undefined => {
+  return fallback ?? body.message?.thread_ts ?? body.container?.thread_ts ?? actionMessageTs(body);
+};
+
 const createReportEvidence = (incident: ParsedIncidentReport, channelId: string): Evidence => ({
   id: "field-report-current",
   source: "Current Slack field report",
@@ -63,15 +75,19 @@ const slackError = (error: unknown): string => {
 export const handleApprovePlanAction = async ({ body, client, logger, planStore }: ActionHandlerDeps): Promise<void> => {
   const planId = body.actions?.[0]?.value;
   const stored = await planStore.get(planId);
+  const channel = actionChannelId(body);
 
   if (!stored) {
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: "I could not find that plan. Please rerun the analysis."
     });
     return;
   }
+
+  const updateChannel = actionChannelId(body, stored.sourceChannel);
+  const updateTs = actionMessageTs(body, stored.messageTs);
 
   stored.state = "approved";
   stored.approvedBy = userLabel(body);
@@ -79,8 +95,8 @@ export const handleApprovePlanAction = async ({ body, client, logger, planStore 
 
   try {
     await client.chat.update({
-      channel: body.channel.id,
-      ts: body.message.ts,
+      channel: updateChannel,
+      ts: updateTs,
       text: `${stored.plan.zoneName} plan approved.`,
       blocks: renderIncidentControlRoom(stored.plan, {
         state: "approved",
@@ -89,16 +105,22 @@ export const handleApprovePlanAction = async ({ body, client, logger, planStore 
     });
   } catch (error) {
     logger?.error(error);
+    await client.chat.postEphemeral({
+      channel: updateChannel,
+      user: body.user.id,
+      text: `Plan approved, but I could not update the control room card (${slackError(error)}). You can still click Post to Coordination.`
+    });
   }
 };
 
 export const handlePostPlanAction = async ({ body, client, logger, planStore, config }: PostPlanDeps): Promise<void> => {
   const planId = body.actions?.[0]?.value;
   const stored = await planStore.get(planId);
+  const channel = actionChannelId(body);
 
   if (!stored) {
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: "I could not find that plan. Please rerun the analysis."
     });
@@ -107,7 +129,7 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
 
   if (stored.state !== "approved") {
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: "Approve the plan before posting it to coordination."
     });
@@ -116,7 +138,7 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
 
   if (!config.coordinationChannelId) {
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: "Missing SLACK_COORDINATION_CHANNEL_ID. Add the #coordination channel ID to .env."
     });
@@ -128,7 +150,7 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
   } catch (error) {
     logger?.error(error);
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: `Could not post to coordination (${slackError(error)}). The plan is still approved. Check SLACK_COORDINATION_CHANNEL_ID, chat:write, and bot membership in #coordination.`
     });
@@ -137,11 +159,13 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
 
   stored.state = "posted";
   await planStore.set(planId, stored);
+  const updateChannel = actionChannelId(body, stored.sourceChannel);
+  const updateTs = actionMessageTs(body, stored.messageTs);
 
   try {
     await client.chat.update({
-      channel: body.channel.id,
-      ts: body.message.ts,
+      channel: updateChannel,
+      ts: updateTs,
       text: `${stored.plan.zoneName} plan posted to coordination.`,
       blocks: renderIncidentControlRoom(stored.plan, {
         state: "posted",
@@ -151,7 +175,7 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
   } catch (error) {
     logger?.error(error);
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel: updateChannel,
       user: body.user.id,
       text: `The plan was posted to coordination, but I could not update this control room card (${slackError(error)}).`
     });
@@ -161,10 +185,11 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
 export const handleGenerateHandoverAction = async ({ body, client, planStore }: ActionHandlerDeps): Promise<void> => {
   const planId = body.actions?.[0]?.value;
   const stored = await planStore.get(planId);
+  const channel = actionChannelId(body);
 
   if (!stored) {
     await client.chat.postEphemeral({
-      channel: body.channel.id,
+      channel,
       user: body.user.id,
       text: "I could not find that plan. Please rerun the analysis."
     });
@@ -172,8 +197,8 @@ export const handleGenerateHandoverAction = async ({ body, client, planStore }: 
   }
 
   await client.chat.postMessage({
-    channel: body.channel.id,
-    thread_ts: stored.threadTs ?? body.message.ts,
+    channel: actionChannelId(body, stored.sourceChannel),
+    thread_ts: actionThreadTs(body, stored.threadTs),
     text: `*Handover Summary*\n${stored.plan.handover}`
   });
 };

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createFallbackPlan } from "../src/planner/fallbackPlanner";
 import type { StoredPlan } from "../src/slack/planStore";
-import { handleGenerateHandoverAction, handlePostPlanAction } from "../src/slack/handlers";
+import { handleApprovePlanAction, handleGenerateHandoverAction, handlePostPlanAction } from "../src/slack/handlers";
 import { findZone, loadLocalData, loadMockContext } from "../src/tools/localData";
 
 const makePlan = () => {
@@ -35,6 +35,10 @@ const makePlan = () => {
 const makeBody = (planId = "plan-1") => ({
   actions: [{ value: planId }],
   channel: { id: "CSOURCE" },
+  container: {
+    channel_id: "CCONTAINER",
+    message_ts: "1710000000.000300"
+  },
   user: { id: "UCOORD", username: "coordinator" },
   message: { ts: "1710000000.000100" }
 });
@@ -58,12 +62,64 @@ const makeStore = (stored: StoredPlan | undefined) => ({
 const makeStoredPlan = (state: StoredPlan["state"]): StoredPlan => ({
   plan: makePlan(),
   state,
+  messageTs: "1710000000.000300",
+  sourceChannel: "CCONTAINER",
   threadTs: "1710000000.000100",
   approvedBy: state === "approved" ? "coordinator" : undefined,
   updatedAt: "2026-07-08T10:00:00.000Z"
 });
 
 describe("Slack action handlers", () => {
+  it("marks a plan approved and updates the control room using container metadata", async () => {
+    const client = makeClient();
+    const store = makeStore(makeStoredPlan("draft"));
+
+    await handleApprovePlanAction({
+      body: makeBody(),
+      client,
+      planStore: store
+    });
+
+    expect(store.set).toHaveBeenCalledWith(
+      "plan-1",
+      expect.objectContaining({
+        state: "approved",
+        approvedBy: "coordinator"
+      })
+    );
+    expect(client.chat.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "CCONTAINER",
+        ts: "1710000000.000300",
+        text: "Zone B plan approved."
+      })
+    );
+  });
+
+  it("keeps approval state and notifies the user if card update fails", async () => {
+    const client = makeClient();
+    client.chat.update.mockRejectedValueOnce(new Error("message_not_found"));
+    const store = makeStore(makeStoredPlan("draft"));
+
+    await handleApprovePlanAction({
+      body: makeBody(),
+      client,
+      planStore: store
+    });
+
+    expect(store.set).toHaveBeenCalledWith(
+      "plan-1",
+      expect.objectContaining({
+        state: "approved"
+      })
+    );
+    expect(client.chat.postEphemeral).toHaveBeenCalledWith({
+      channel: "CCONTAINER",
+      user: "UCOORD",
+      text: expect.stringContaining("Plan approved, but I could not update the control room card")
+    });
+  });
+
   it("refuses to post a plan before approval", async () => {
     const client = makeClient();
     const store = makeStore(makeStoredPlan("draft"));
@@ -78,7 +134,7 @@ describe("Slack action handlers", () => {
     });
 
     expect(client.chat.postEphemeral).toHaveBeenCalledWith({
-      channel: "CSOURCE",
+      channel: "CCONTAINER",
       user: "UCOORD",
       text: "Approve the plan before posting it to coordination."
     });
@@ -97,7 +153,7 @@ describe("Slack action handlers", () => {
     });
 
     expect(client.chat.postEphemeral).toHaveBeenCalledWith({
-      channel: "CSOURCE",
+      channel: "CCONTAINER",
       user: "UCOORD",
       text: "Missing SLACK_COORDINATION_CHANNEL_ID. Add the #coordination channel ID to .env."
     });
@@ -117,7 +173,7 @@ describe("Slack action handlers", () => {
     });
 
     expect(client.chat.postMessage).toHaveBeenCalledWith({
-      channel: "CSOURCE",
+      channel: "CCONTAINER",
       thread_ts: "1710000000.000200",
       text: expect.stringContaining("*Handover Summary*")
     });

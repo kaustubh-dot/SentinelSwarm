@@ -30,6 +30,14 @@ const cap = (text: string, limit = 140): string => (text.length > limit ? `${tex
 
 const routeCode = (routeName: string): string | undefined => routeName.match(/\bR\d+\b/i)?.[0]?.toLowerCase();
 
+const normalize = (text: string): string => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const routeDescriptor = (routeName: string): string | undefined => {
+  const withoutCode = routeName.replace(/\bR\d+\b/i, "");
+  const descriptor = withoutCode.replace(/\bvia\b/i, "").trim();
+  return descriptor ? normalize(descriptor) : undefined;
+};
+
 const routeStatusFromText = (text: string, fallback: LocalData["routes"][number]["status"]): LocalData["routes"][number]["status"] => {
   if (/blocked|closed|unsafe|avoid|debris|overflow/.test(text)) {
     return "blocked";
@@ -52,11 +60,30 @@ const routeSpecificText = (text: string, terms: string[]): string => {
   return sentence ?? text;
 };
 
-const assessRouteFromEvidence = (route: LocalData["routes"][number], evidence: Evidence[]): LocalData["routes"][number] & { evidenceNote?: string } => {
-  const terms = [route.id.toLowerCase(), route.name.toLowerCase(), routeCode(route.name)].filter((term): term is string => Boolean(term));
+const evidenceMentionsRoute = (route: LocalData["routes"][number], zone: Zone, text: string): boolean => {
+  const normalizedText = normalize(text);
+  const code = routeCode(route.name);
+  const descriptor = routeDescriptor(route.name);
+  const fullName = normalize(route.name);
+  const zoneTerms = [normalize(zone.name), normalize(zone.label)];
+
+  if (normalizedText.includes(normalize(route.id)) || normalizedText.includes(fullName)) {
+    return true;
+  }
+
+  if (descriptor && normalizedText.includes(descriptor)) {
+    return true;
+  }
+
+  return Boolean(code && normalizedText.includes(code) && zoneTerms.some((term) => normalizedText.includes(term)));
+};
+
+const assessRouteFromEvidence = (route: LocalData["routes"][number], zone: Zone, evidence: Evidence[]): LocalData["routes"][number] & { evidenceNote?: string } => {
+  const terms = [route.id.toLowerCase(), route.name.toLowerCase(), routeCode(route.name), routeDescriptor(route.name)].filter(
+    (term): term is string => Boolean(term)
+  );
   const relevant = evidence.find((item) => {
-    const text = item.text.toLowerCase();
-    return terms.some((term) => text.includes(term));
+    return evidenceMentionsRoute(route, zone, item.text);
   });
 
   if (!relevant) {
@@ -93,7 +120,7 @@ export const createFallbackPlan = (input: PlannerInput): IncidentPlan => {
   const routes = input.localData.routes.filter((route) => route.zoneId === input.zone.id);
   const shelters = input.localData.shelters.filter((shelter) => shelter.zoneId === input.zone.id);
   const volunteers = input.localData.volunteers.filter((volunteer) => volunteer.zonePreference === input.zone.id || volunteer.zonePreference === "any");
-  const routeAssessments = routes.map((route) => assessRouteFromEvidence(route, evidence));
+  const routeAssessments = routes.map((route) => assessRouteFromEvidence(route, input.zone, evidence));
   const blockedRoutes = routeAssessments.filter((route) => route.status === "blocked");
   const bestShelter = shelters.sort((a, b) => b.availableSpaces - a.availableSpaces)[0];
   const shelterPressure = bestShelter ? 1 - bestShelter.availableSpaces / Math.max(bestShelter.capacity, 1) : 1;
@@ -140,13 +167,22 @@ export const createFallbackPlan = (input: PlannerInput): IncidentPlan => {
     }))
   ];
 
-  const peoplePhrase = input.incident?.affectedPeople ? `${input.incident.affectedPeople} reported affected people, ` : "";
+  const affectedCountPhrase = input.incident?.affectedPeople
+    ? `${input.incident.affectedPeople} reported affected people, `
+    : input.incident?.affectedHouseholds
+      ? `${input.incident.affectedHouseholds} reported households/families, `
+      : "";
   const vulnerablePhrase = input.incident?.vulnerableGroups.length
     ? ` Vulnerable groups mentioned: ${input.incident.vulnerableGroups.join(", ")}.`
     : "";
   const actionLabel = requestedActionLabel(input.incident?.requestedAction);
-  const actionPrefix = input.incident?.affectedPeople
-    ? `Prioritize ${actionLabel} for ${input.incident.affectedPeople} reported people in ${input.zone.name}.`
+  const affectedActionTarget = input.incident?.affectedPeople
+    ? `${input.incident.affectedPeople} reported people`
+    : input.incident?.affectedHouseholds
+      ? `${input.incident.affectedHouseholds} reported households/families`
+      : undefined;
+  const actionPrefix = affectedActionTarget
+    ? `Prioritize ${actionLabel} for ${affectedActionTarget} in ${input.zone.name}.`
     : `Prioritize ${actionLabel} in ${input.zone.name}.`;
 
   const plan: IncidentPlan = {
@@ -162,7 +198,7 @@ export const createFallbackPlan = (input: PlannerInput): IncidentPlan => {
       flood: input.flood.signal.source,
       planner: "deterministic"
     },
-    summary: `${input.zone.name} is at ${severity.level} risk: ${peoplePhrase}${blockedRoutes.length} blocked route(s), ${bestShelter?.availableSpaces ?? 0} shelter spaces, and weather/flood signals require coordinator review.${vulnerablePhrase}`,
+    summary: `${input.zone.name} is at ${severity.level} risk: ${affectedCountPhrase}${blockedRoutes.length} blocked route(s), ${bestShelter?.availableSpaces ?? 0} shelter spaces, and weather/flood signals require coordinator review.${vulnerablePhrase}`,
     evidence,
     riskSignals: [input.weather.signal, input.flood.signal],
     incidents: [

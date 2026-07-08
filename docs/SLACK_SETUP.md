@@ -88,6 +88,14 @@ Copy the channel ID for `#coordination` into `.env`:
 SLACK_COORDINATION_CHANNEL_ID=C...
 ```
 
+For live recording, set:
+
+```txt
+SENTINEL_FORCE_MOCKS=false
+```
+
+Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
+
 ## 6. First Smoke Test
 
 Run:
@@ -169,7 +177,7 @@ Important:
 - Confirm `search:read.public` is installed.
 - Confirm the app is internal or eligible for RTS.
 - Confirm the app mention payload contains `action_token`.
-- Keep going: fallback mode is expected to keep the demo working.
+- Keep going: SentinelSwarm tries live Slack channel scan next, then mock context, and labels the evidence source in the card.
 
 ### Should I Connect Slack As MCP?
 

@@ -1,6 +1,7 @@
 export type ParsedIncidentReport = {
   zoneInput: string;
   affectedPeople?: number;
+  affectedHouseholds?: number;
   routeBlocked: boolean;
   hazards: string[];
   vulnerableGroups: string[];
@@ -48,15 +49,19 @@ const extractZoneInput = (text: string): string => {
   return match ? `Zone ${match[1].toUpperCase()}` : "Zone B";
 };
 
-const extractAffectedPeople = (text: string): number | undefined => {
-  const numeric = text.match(/\b(\d{1,4})\s+(people|persons|residents|evacuees|families|homes|households)\b/i);
+const extractAffectedCount = (text: string, units: string): number | undefined => {
+  const numeric = text.match(new RegExp(`\\b(\\d{1,4})\\s+(${units})\\b`, "i"));
   if (numeric) {
     return Number.parseInt(numeric[1], 10);
   }
 
-  const word = text.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(people|persons|residents|evacuees|families|homes|households)\b/i);
+  const word = text.match(new RegExp(`\\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\\s+(${units})\\b`, "i"));
   return word ? NUMBER_WORDS[word[1].toLowerCase()] : undefined;
 };
+
+const extractAffectedPeople = (text: string): number | undefined => extractAffectedCount(text, "people|persons|residents|evacuees");
+
+const extractAffectedHouseholds = (text: string): number | undefined => extractAffectedCount(text, "families|homes|households");
 
 const extractHazards = (lowerText: string): string[] => {
   const hazards = [
@@ -117,6 +122,7 @@ export const parseIncidentReport = (text: string): ParsedIncidentReport => {
   return {
     zoneInput: extractZoneInput(normalizedText),
     affectedPeople: extractAffectedPeople(normalizedText),
+    affectedHouseholds: extractAffectedHouseholds(normalizedText),
     routeBlocked: /blocked|bridge|debris|route closed|unsafe route/.test(lowerText),
     hazards: extractHazards(lowerText),
     vulnerableGroups: extractVulnerableGroups(lowerText),
@@ -124,4 +130,3 @@ export const parseIncidentReport = (text: string): ParsedIncidentReport => {
     normalizedText
   };
 };
-

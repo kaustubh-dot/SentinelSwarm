@@ -29,6 +29,8 @@ The app is designed to work even if external services fail:
 3. Install the app to your Slack developer sandbox.
 4. Invite the bot to the demo channels.
 5. Copy `.env.example` to `.env` and fill the Slack tokens.
+   - For live recording, set `SENTINEL_FORCE_MOCKS=false`.
+   - Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
 6. Install dependencies and run:
 
 ```bash

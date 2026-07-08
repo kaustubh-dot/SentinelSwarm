@@ -34,6 +34,17 @@ const createReportEvidence = (incident: ParsedIncidentReport, channelId: string)
   sourceType: "slack"
 });
 
+const slackError = (error: unknown): string => {
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = (error as { data?: { error?: string } }).data;
+    if (data?.error) {
+      return data.error;
+    }
+  }
+
+  return error instanceof Error ? error.message : "unknown_error";
+};
+
 export const registerHandlers = (app: App, config: AppConfig): void => {
   app.event("app_mention", async ({ event, client, say, logger }) => {
     const eventAny = event as any;
@@ -135,7 +146,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
     }
   });
 
-  app.action("post_plan", async ({ ack, body, client }) => {
+  app.action("post_plan", async ({ ack, body, client, logger }) => {
     await ack();
     const bodyAny = body as any;
     const planId = bodyAny.actions?.[0]?.value;
@@ -168,7 +179,18 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
       return;
     }
 
-    await postPlanToCoordination(client, config.coordinationChannelId, stored.plan, stored.approvedBy ?? userLabel(bodyAny));
+    try {
+      await postPlanToCoordination(client, config.coordinationChannelId, stored.plan, stored.approvedBy ?? userLabel(bodyAny));
+    } catch (error) {
+      logger.error(error);
+      await client.chat.postEphemeral({
+        channel: bodyAny.channel.id,
+        user: bodyAny.user.id,
+        text: `Could not post to coordination (${slackError(error)}). The plan is still approved. Check SLACK_COORDINATION_CHANNEL_ID, chat:write, and bot membership in #coordination.`
+      });
+      return;
+    }
+
     stored.state = "posted";
     planStore.set(planId, stored);
 

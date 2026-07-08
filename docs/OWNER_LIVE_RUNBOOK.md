@@ -53,32 +53,32 @@ Suggested live seed pack:
 
 ```txt
 #alerts
-Weather desk: rainfall intensity increasing near Zone A for the next 90 minutes. Low-lying lanes near the canal should be treated as high risk.
+Weather desk: rainfall intensity increasing near Zone B for the next 90 minutes. Riverside Lane and the old bus depot area should be treated as high risk.
 ```
 
 ```txt
 #field-reports
-Zone A field update: water rising near Canal Road. 25 residents need evacuation support, including elderly residents and two children. Bridge access is blocked.
+Zone B field update: water rising near Riverside Lane. 25 residents need evacuation support, including elderly residents and two children. Bridge access is blocked.
 ```
 
 ```txt
 #routes
-Zone A route update: Route R2 over Canal Bridge is blocked by overflow. Route R4 via East Bypass is open for emergency vehicles.
+Zone B route update: Route R2 through Riverside Lane is blocked by overflow. Route R4 via Hill School Road is open for emergency vehicles.
 ```
 
 ```txt
 #shelters
-Hill School annex has 80 free beds, generator backup, and drinking water for Zone A evacuees tonight.
+Hill School shelter has 18 free beds, generator backup, and blankets for Zone B evacuees tonight.
 ```
 
 ```txt
 #supplies
-Ward 12 storage has 120 water bottles, 45 blankets, 18 first-aid kits, and 6 portable lights ready for dispatch.
+Main depot has 40 water cans, 25 blankets, 12 first-aid kits, and a driver available if the route is confirmed.
 ```
 
 ```txt
 #volunteers
-8 trained volunteers are available near Zone A. 3 have first-aid training, 2 have pickup vehicles, and 1 can coordinate phone check-ins.
+Anika and Dev are available near Zone B with a 4x4 from 5pm to 9pm. Maya can coordinate phone check-ins for the next 3 hours.
 ```
 
 ## 3. Live Test Flow
@@ -98,7 +98,7 @@ SentinelSwarm is online.
 Then run the main demo message in `#field-reports`:
 
 ```txt
-@SentinelSwarm heavy rain near Zone A, water rising, 25 people need evacuation, route bridge blocked
+@SentinelSwarm heavy rain near Zone B, water rising near Riverside Lane, 25 people need evacuation, Route R2 blocked
 ```
 
 Expected:
@@ -134,7 +134,7 @@ For a strong proof that the app is not hardcoded:
 Example alternate route seed:
 
 ```txt
-Zone A route update: Route R2 over Canal Bridge is now open for emergency vehicles. Route R4 via East Bypass is blocked by stalled traffic.
+Zone B route update: Route R2 through Riverside Lane is now open for emergency vehicles. Route R4 via Hill School Road is blocked by stalled traffic.
 ```
 
 ## 5. Recording Checklist
@@ -145,7 +145,7 @@ Recommended sequence:
 
 1. Briefly show seeded Slack channel chaos.
 2. Open `#field-reports`.
-3. Send the Zone A natural incident message.
+3. Send the Zone B natural incident message.
 4. Show the Incident Control Room.
 5. Point to Evidence Ledger and source/status indicators.
 6. Click `Approve Plan`.

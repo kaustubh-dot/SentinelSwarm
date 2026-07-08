@@ -122,7 +122,7 @@ Run these before recording and before submission:
 - Click Post to Coordination.
 - Confirm `#coordination` receives final plan.
 - Force mock mode and repeat once.
-- Temporarily disable LLM and repeat once.
+- Confirm the card shows `Deterministic planner`, and repeat once with mock mode forced.
 - Confirm no token or secret appears in logs or video.
 - Confirm the project still makes sense if MCP is not used.
 

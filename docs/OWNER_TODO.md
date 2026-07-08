@@ -4,7 +4,8 @@ This checklist tracks the live Slack product path. Target the primary recording 
 
 ## Live Product Goal
 
-- [ ] Primary demo uses live Slack channel context, not hardcoded mock data.
+- [ ] Primary demo attempts Slack Real-Time Search first.
+- [ ] Live Slack channel scan is the labeled fallback when RTS is unavailable.
 - [ ] Mock mode exists only as fallback.
 - [ ] Incident Control Room changes when Slack channel evidence changes.
 - [ ] Full flow works: `#field-reports` -> bot plan -> approval -> `#coordination`.

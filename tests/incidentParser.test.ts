@@ -24,5 +24,12 @@ describe("incidentParser", () => {
     expect(shouldOpenIncidentControlRoom("@SentinelSwarm analyze Zone B risk")).toBe(true);
     expect(parseIncidentReport("@SentinelSwarm analyze Zone B risk").zoneInput).toBe("Zone B");
   });
-});
 
+  it("does not label homes or households as affected people", () => {
+    const parsed = parseIncidentReport("@SentinelSwarm Zone B update: two homes requesting evacuation support");
+
+    expect(parsed.affectedPeople).toBeUndefined();
+    expect(parsed.affectedHouseholds).toBe(2);
+    expect(parsed.requestedAction).toBe("evacuation");
+  });
+});

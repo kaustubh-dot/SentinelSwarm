@@ -92,4 +92,54 @@ describe("createFallbackPlan", () => {
     expect(plan.routeActions.find((route) => route.routeName.includes("R2"))?.status).toBe("blocked");
     expect(plan.routeActions.find((route) => route.routeName.includes("R4"))?.status).toBe("open");
   });
+
+  it("does not let same-number routes from another zone override the selected zone", () => {
+    const localData = loadLocalData();
+    const incident = parseIncidentReport("heavy rain near Zone A, water rising, 25 people need evacuation");
+    const zone = findZone(localData.zones, incident.zoneInput);
+    const plan = createFallbackPlan({
+      zone,
+      localData,
+      incident,
+      evidence: [
+        {
+          id: "current-report",
+          source: "Current Slack field report",
+          channel: "#field-reports",
+          text: "Zone A field update: heavy rain, rising water, 25 people need evacuation.",
+          confidence: 0.94,
+          sourceType: "slack"
+        },
+        {
+          id: "other-zone-route",
+          source: "Live Slack channel scan",
+          channel: "#routes",
+          text: "Zone B route update: Route R4 via Hill School Road is blocked by debris.",
+          confidence: 0.78,
+          sourceType: "slack"
+        }
+      ],
+      contextStatus: "slack",
+      weather: {
+        precipitationMm: 8.4,
+        signal: {
+          label: "Weather",
+          summary: "Live weather",
+          source: "live",
+          scoreImpact: 16
+        }
+      },
+      flood: {
+        floodRiskIndex: 0.75,
+        signal: {
+          label: "Flood",
+          summary: "Live flood",
+          source: "live",
+          scoreImpact: 19
+        }
+      }
+    });
+
+    expect(plan.routeActions.find((route) => route.routeName.includes("East Bypass"))?.status).toBe("open");
+  });
 });

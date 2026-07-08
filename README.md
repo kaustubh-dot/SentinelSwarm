@@ -41,6 +41,15 @@ npm run dev
 
 See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/MANUAL_SETUP.md).
 
+## Demo And Submission Assets
+
+- [Demo seed messages](docs/DEMO_SEED_MESSAGES.md)
+- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
+- [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
+- [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
+- [Judge Q&A](docs/JUDGE_QA.md)
+- [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
+
 ## Optional Gemini Refinement
 
 The live Slack demo does not require an LLM. Keep the main Zone B run focused on:

@@ -24,6 +24,7 @@ const VolunteerSchema = z.object({
 const SupplySchema = z.object({
   id: z.string(),
   name: z.string(),
+  zoneId: z.string().optional(),
   quantity: z.number(),
   unit: z.string(),
   location: z.string()

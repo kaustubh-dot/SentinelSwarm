@@ -36,7 +36,42 @@ describe("createFallbackPlan", () => {
     expect(plan.evidence.length).toBeGreaterThanOrEqual(3);
     expect(plan.routeActions.some((route) => route.status === "blocked")).toBe(true);
     expect(plan.resourceMatches.length).toBeGreaterThanOrEqual(3);
+    expect(plan.resourceMatches.some((match) => match.type === "supply" && match.name === "water cans")).toBe(true);
+    expect(plan.resourceMatches.some((match) => match.type === "supply" && match.name === "water bottles")).toBe(false);
     expect(plan.recommendedActions.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("does not mutate local shelter ordering while choosing the best shelter", () => {
+    const localData = loadLocalData();
+    const originalShelterOrder = localData.shelters.map((shelter) => shelter.id);
+    const zone = findZone(localData.zones, "Zone B");
+
+    createFallbackPlan({
+      zone,
+      localData,
+      evidence: loadMockContext(),
+      contextStatus: "mock",
+      weather: {
+        precipitationMm: 8.4,
+        signal: {
+          label: "Weather",
+          summary: "Mock weather",
+          source: "mock",
+          scoreImpact: 16
+        }
+      },
+      flood: {
+        floodRiskIndex: 0.92,
+        signal: {
+          label: "Flood",
+          summary: "Mock flood",
+          source: "mock",
+          scoreImpact: 23
+        }
+      }
+    });
+
+    expect(localData.shelters.map((shelter) => shelter.id)).toEqual(originalShelterOrder);
   });
 
   it("adapts Zone A route guidance from live-style Slack evidence", () => {
@@ -91,6 +126,8 @@ describe("createFallbackPlan", () => {
     expect(plan.statuses.context).toBe("slack");
     expect(plan.routeActions.find((route) => route.routeName.includes("R2"))?.status).toBe("blocked");
     expect(plan.routeActions.find((route) => route.routeName.includes("R4"))?.status).toBe("open");
+    expect(plan.resourceMatches.some((match) => match.type === "supply" && match.name === "water bottles")).toBe(true);
+    expect(plan.resourceMatches.some((match) => match.type === "supply" && match.name === "water cans")).toBe(false);
   });
 
   it("does not let same-number routes from another zone override the selected zone", () => {

@@ -39,4 +39,58 @@ describe("formatCoordinationPost", () => {
     expect(post).toContain("Recommended actions");
     expect(post).toContain("Route guidance");
   });
+
+  it("caps verbose planner text in the final coordination post", () => {
+    const localData = loadLocalData();
+    const plan = createFallbackPlan({
+      zone: findZone(localData.zones, "Zone B"),
+      localData,
+      evidence: loadMockContext(),
+      contextStatus: "mock",
+      weather: {
+        precipitationMm: 8.4,
+        signal: {
+          label: "Weather",
+          summary: "Mock weather",
+          source: "mock",
+          scoreImpact: 16
+        }
+      },
+      flood: {
+        floodRiskIndex: 0.92,
+        signal: {
+          label: "Flood",
+          summary: "Mock flood",
+          source: "mock",
+          scoreImpact: 23
+        }
+      }
+    });
+    const longText = "repeatable coordination detail ".repeat(80);
+
+    const post = formatCoordinationPost(
+      {
+        ...plan,
+        recommendedActions: [longText],
+        routeActions: plan.routeActions.map((route) => ({
+          ...route,
+          routeName: longText,
+          recommendation: longText
+        })),
+        resourceMatches: plan.resourceMatches.map((match) => ({
+          ...match,
+          name: longText,
+          recommendation: longText
+        })),
+        evidence: plan.evidence.map((item) => ({
+          ...item,
+          text: longText
+        }))
+      },
+      "Kaustubh"
+    );
+
+    expect(post).not.toContain(longText);
+    expect(post).toContain("...");
+  });
 });

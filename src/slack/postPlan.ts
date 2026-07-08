@@ -1,19 +1,21 @@
 import type { WebClient } from "@slack/web-api";
 import type { IncidentPlan } from "../planner/schema";
 
+const cap = (text: string, limit = 240): string => (text.length > limit ? `${text.slice(0, limit - 3)}...` : text);
+
 export const formatCoordinationPost = (plan: IncidentPlan, approvedBy: string): string => {
-  const actions = plan.recommendedActions.map((action, index) => `${index + 1}. ${action}`).join("\n");
+  const actions = plan.recommendedActions.map((action, index) => `${index + 1}. ${cap(action)}`).join("\n");
   const routes = plan.routeActions
     .slice(0, 4)
-    .map((route) => `- ${route.routeName}: ${route.status.toUpperCase()} - ${route.recommendation}`)
+    .map((route) => `- ${cap(route.routeName, 80)}: ${route.status.toUpperCase()} - ${cap(route.recommendation)}`)
     .join("\n");
   const assignments = plan.resourceMatches
     .slice(0, 5)
-    .map((match) => `- ${match.type.toUpperCase()} ${match.name}: ${match.recommendation}`)
+    .map((match) => `- ${match.type.toUpperCase()} ${cap(match.name, 80)}: ${cap(match.recommendation)}`)
     .join("\n");
   const why = plan.evidence
     .slice(0, 3)
-    .map((item) => `- ${item.channel}: ${item.text.length > 150 ? `${item.text.slice(0, 147)}...` : item.text}`)
+    .map((item) => `- ${item.channel}: ${cap(item.text, 150)}`)
     .join("\n");
 
   return [

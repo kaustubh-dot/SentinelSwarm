@@ -54,12 +54,12 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
     .join("\n");
 
   const incidentsText = plan.incidents
-    .map((incident) => `*${incident.severity.toUpperCase()}* ${incident.title}: ${incident.summary}`)
+    .map((incident) => `*${incident.severity.toUpperCase()}* ${cap(incident.title, 80)}: ${cap(incident.summary, 220)}`)
     .join("\n");
 
   const routeText = plan.routeActions
     .slice(0, 4)
-    .map((route) => `*${route.status.toUpperCase()}* ${route.routeName}: ${route.recommendation}`)
+    .map((route) => `*${route.status.toUpperCase()}* ${cap(route.routeName, 80)}: ${cap(route.recommendation, 180)}`)
     .join("\n");
 
   const resourcesText = plan.resourceMatches
@@ -67,7 +67,7 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
     .map((match) => `*${match.type}* ${match.name}: ${cap(match.recommendation, 160)}`)
     .join("\n");
 
-  const actionsText = plan.recommendedActions.map((action, index) => `${index + 1}. ${action}`).join("\n");
+  const actionsText = plan.recommendedActions.map((action, index) => `${index + 1}. ${cap(action, 220)}`).join("\n");
 
   return [
     {
@@ -89,7 +89,7 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Risk Summary*\n${plan.summary}`
+        text: `*Risk Summary*\n${cap(plan.summary, 650)}`
       }
     },
     {

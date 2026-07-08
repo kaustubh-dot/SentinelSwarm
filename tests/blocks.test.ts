@@ -44,4 +44,55 @@ describe("renderIncidentControlRoom", () => {
     expect(rendered).toContain("Approve Plan");
     expect(rendered).toContain("Post to Coordination");
   });
+
+  it("keeps LLM-influenced section text within Slack Block Kit limits", () => {
+    const localData = loadLocalData();
+    const zone = findZone(localData.zones, "Zone B");
+    const plan = createFallbackPlan({
+      zone,
+      localData,
+      evidence: loadMockContext(),
+      contextStatus: "mock",
+      weather: {
+        precipitationMm: 8.4,
+        signal: {
+          label: "Weather",
+          summary: "Mock weather",
+          source: "mock",
+          scoreImpact: 16
+        }
+      },
+      flood: {
+        floodRiskIndex: 0.92,
+        signal: {
+          label: "Flood",
+          summary: "Mock flood",
+          source: "mock",
+          scoreImpact: 23
+        }
+      }
+    });
+    const longText = "route and shelter coordination ".repeat(80);
+    const blocks = renderIncidentControlRoom({
+      ...plan,
+      summary: longText,
+      incidents: plan.incidents.map((incident) => ({
+        ...incident,
+        title: longText,
+        summary: longText
+      })),
+      routeActions: plan.routeActions.map((route) => ({
+        ...route,
+        routeName: longText,
+        recommendation: longText
+      })),
+      recommendedActions: Array.from({ length: 8 }, () => longText)
+    });
+
+    const sectionTexts = blocks
+      .filter((block) => block.type === "section")
+      .map((block) => block.text.text as string);
+
+    expect(sectionTexts.every((text) => text.length <= 3000)).toBe(true);
+  });
 });

@@ -120,9 +120,10 @@ export const createFallbackPlan = (input: PlannerInput): IncidentPlan => {
   const routes = input.localData.routes.filter((route) => route.zoneId === input.zone.id);
   const shelters = input.localData.shelters.filter((shelter) => shelter.zoneId === input.zone.id);
   const volunteers = input.localData.volunteers.filter((volunteer) => volunteer.zonePreference === input.zone.id || volunteer.zonePreference === "any");
+  const supplies = input.localData.supplies.filter((supply) => !supply.zoneId || supply.zoneId === input.zone.id);
   const routeAssessments = routes.map((route) => assessRouteFromEvidence(route, input.zone, evidence));
   const blockedRoutes = routeAssessments.filter((route) => route.status === "blocked");
-  const bestShelter = shelters.sort((a, b) => b.availableSpaces - a.availableSpaces)[0];
+  const bestShelter = [...shelters].sort((a, b) => b.availableSpaces - a.availableSpaces)[0];
   const shelterPressure = bestShelter ? 1 - bestShelter.availableSpaces / Math.max(bestShelter.capacity, 1) : 1;
 
   const severity = scoreSeverity({
@@ -160,7 +161,7 @@ export const createFallbackPlan = (input: PlannerInput): IncidentPlan => {
           }
         ]
       : []),
-    ...input.localData.supplies.slice(0, 3).map((supply) => ({
+    ...supplies.slice(0, 3).map((supply) => ({
       type: "supply" as const,
       name: supply.name,
       recommendation: `Stage ${supply.quantity} ${supply.unit} of ${supply.name} from ${supply.location}.`

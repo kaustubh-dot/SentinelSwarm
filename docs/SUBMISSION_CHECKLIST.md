@@ -8,6 +8,7 @@
 
 ## Devpost Fields
 
+- Draft source: `docs/DEVPOST_SUBMISSION_DRAFT.md`.
 - Project name: SentinelSwarm.
 - Track: Slack Agent for Good.
 - Short tagline: Slack-native crisis coordination for floods, landslides, and local disaster response.
@@ -32,6 +33,8 @@
 
 ## Demo Video Checklist
 
+- Storyboard source: `docs/DEMO_VIDEO_STORYBOARD.md`.
+- Seed message source: `docs/DEMO_SEED_MESSAGES.md`.
 - Length is under 3 minutes.
 - Video shows the working Slack project, not only slides.
 - No secrets, tokens, private data, copyrighted music, or real personal information are visible.

@@ -1,25 +1,17 @@
 import type { App } from "@slack/bolt";
 import type { AppConfig } from "../config";
-import { createFallbackPlan } from "../planner/fallbackPlanner";
 import { parseIncidentReport, shouldOpenIncidentControlRoom, type ParsedIncidentReport } from "../planner/incidentParser";
+import { createIncidentPlan } from "../planner/planner";
 import type { Evidence, IncidentPlan } from "../planner/schema";
 import { getFloodRisk } from "../tools/flood";
 import { findZone, loadLocalData } from "../tools/localData";
 import { getWeatherRisk } from "../tools/weather";
 import { renderIncidentControlRoom } from "./blocks";
+import { createLocalPlanStore } from "./planStore";
 import { postPlanToCoordination } from "./postPlan";
 import { searchSlackContext } from "./rts";
 
-type StoredPlan = {
-  plan: IncidentPlan;
-  approvedBy?: string;
-  messageTs?: string;
-  sourceChannel?: string;
-  threadTs?: string;
-  state: "draft" | "approved" | "posted";
-};
-
-const planStore = new Map<string, StoredPlan>();
+const planStore = createLocalPlanStore();
 
 const userLabel = (body: any): string => {
   return body.user?.username ?? body.user?.name ?? body.user?.id ?? "coordinator";
@@ -76,15 +68,19 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
       const flood = await getFloodRisk(zone, config.forceMocks);
       const reportEvidence = createReportEvidence(incident, eventAny.channel);
 
-      const plan = createFallbackPlan({
-        zone,
-        localData,
-        evidence: [reportEvidence, ...context.evidence],
-        contextStatus: context.status,
-        weather,
-        flood,
-        incident
-      });
+      const planner = await createIncidentPlan(
+        {
+          zone,
+          localData,
+          evidence: [reportEvidence, ...context.evidence],
+          contextStatus: context.status,
+          weather,
+          flood,
+          incident
+        },
+        config
+      );
+      const plan = planner.plan;
 
       const response = await say({
         text: plan.summary,
@@ -92,7 +88,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
         blocks: renderIncidentControlRoom(plan)
       });
 
-      planStore.set(plan.planId, {
+      await planStore.set(plan.planId, {
         plan,
         state: "draft",
         messageTs: (response as any).ts,
@@ -102,6 +98,9 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
 
       if (context.reason) {
         logger.info(`Context fallback reason: ${context.reason}`);
+      }
+      if (planner.reason) {
+        logger.info(`Planner mode: ${planner.mode}; ${planner.reason}`);
       }
     } catch (error) {
       logger.error(error);
@@ -116,7 +115,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
     await ack();
     const bodyAny = body as any;
     const planId = bodyAny.actions?.[0]?.value;
-    const stored = planStore.get(planId);
+    const stored = await planStore.get(planId);
 
     if (!stored) {
       await client.chat.postEphemeral({
@@ -129,7 +128,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
 
     stored.state = "approved";
     stored.approvedBy = userLabel(bodyAny);
-    planStore.set(planId, stored);
+    await planStore.set(planId, stored);
 
     try {
       await client.chat.update({
@@ -150,7 +149,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
     await ack();
     const bodyAny = body as any;
     const planId = bodyAny.actions?.[0]?.value;
-    const stored = planStore.get(planId);
+    const stored = await planStore.get(planId);
 
     if (!stored) {
       await client.chat.postEphemeral({
@@ -192,24 +191,33 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
     }
 
     stored.state = "posted";
-    planStore.set(planId, stored);
+    await planStore.set(planId, stored);
 
-    await client.chat.update({
-      channel: bodyAny.channel.id,
-      ts: bodyAny.message.ts,
-      text: `${stored.plan.zoneName} plan posted to coordination.`,
-      blocks: renderIncidentControlRoom(stored.plan, {
-        state: "posted",
-        approvedBy: stored.approvedBy
-      })
-    });
+    try {
+      await client.chat.update({
+        channel: bodyAny.channel.id,
+        ts: bodyAny.message.ts,
+        text: `${stored.plan.zoneName} plan posted to coordination.`,
+        blocks: renderIncidentControlRoom(stored.plan, {
+          state: "posted",
+          approvedBy: stored.approvedBy
+        })
+      });
+    } catch (error) {
+      logger.error(error);
+      await client.chat.postEphemeral({
+        channel: bodyAny.channel.id,
+        user: bodyAny.user.id,
+        text: `The plan was posted to coordination, but I could not update this control room card (${slackError(error)}).`
+      });
+    }
   });
 
   app.action("generate_handover", async ({ ack, body, client }) => {
     await ack();
     const bodyAny = body as any;
     const planId = bodyAny.actions?.[0]?.value;
-    const stored = planStore.get(planId);
+    const stored = await planStore.get(planId);
 
     if (!stored) {
       await client.chat.postEphemeral({

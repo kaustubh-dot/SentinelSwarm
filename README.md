@@ -20,7 +20,7 @@ The app is designed to work even if external services fail:
 - Real-Time Search failure -> live Slack channel scan when available -> local `mockContext.json`
 - Weather API failure -> local `mockWeather.json`
 - Flood API failure -> local `mockFlood.json`
-- Planner currently runs deterministically; optional LLM mode is planned, and deterministic planning remains the fallback.
+- LLM refinement is optional and off by default. If the API key is missing, the compatible API fails, or the LLM returns invalid JSON after one schema-repair retry, SentinelSwarm uses the deterministic fallback planner.
 
 ## Setup
 
@@ -31,6 +31,7 @@ The app is designed to work even if external services fail:
 5. Copy `.env.example` to `.env` and fill the Slack tokens.
    - For live recording, set `SENTINEL_FORCE_MOCKS=false`.
    - Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
+   - Leave `SENTINEL_USE_LLM=false` for the most reliable demo path.
 6. Install dependencies and run:
 
 ```bash
@@ -40,12 +41,44 @@ npm run dev
 
 See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/MANUAL_SETUP.md).
 
+## Optional LLM Refinement
+
+The live Slack demo does not require an LLM. Keep the main Zone B run focused on:
+
+```txt
+SENTINEL_FORCE_MOCKS=false
+SENTINEL_USE_LLM=false
+@SentinelSwarm analyze Zone B risk
+```
+
+To experiment with an OpenAI-compatible refinement layer after the deterministic demo works, set:
+
+```txt
+SENTINEL_USE_LLM=true
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+This layer may polish or refine the structured plan, but it is never required for the demo. Missing credentials, API errors, timeouts, and invalid LLM JSON all fall back to the deterministic planner so approval and posting still work.
+
+Privacy note: enable LLM refinement only when your Slack demo data is fictional or you are allowed to send it to the configured provider. SentinelSwarm redacts raw Slack user IDs, channel IDs, permalinks, and URLs before the optional LLM call, but the report text is still included for planning context.
+
 ## Test
 
 ```bash
 npm test
 npm run build
 npm run smoke:slack
+```
+
+On Windows PowerShell, prefer the `.cmd` forms if script execution policy blocks npm shims:
+
+```powershell
+npm.cmd test
+npm.cmd run build
+npm.cmd run smoke:slack
+npm.cmd run dev
 ```
 
 `npm run smoke:slack` checks Slack tokens, Socket Mode token validity, demo channel access, and `#coordination` setup without printing secrets.

@@ -176,15 +176,20 @@ Acceptance criteria:
 - Add `src/planner/llm.ts`.
 - Add `src/planner/prompt.ts`.
 - Make LLM opt-in through `SENTINEL_USE_LLM=true`.
+- Support OpenAI-compatible configuration through `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL`.
 - Validate LLM output with Zod.
 - Retry once for schema repair.
 - Fall back to deterministic planner.
+- Keep the live Slack demo instructions centered on `SENTINEL_FORCE_MOCKS=false` and `@SentinelSwarm analyze Zone B risk`; the LLM is refinement only.
 
 Acceptance criteria:
 
 - App works without `OPENAI_API_KEY`.
+- App works when `SENTINEL_USE_LLM=false`, even if all OpenAI-compatible variables are empty.
+- API failures, timeouts, and provider errors cannot block the demo.
 - Invalid LLM output cannot break the demo.
-- Card displays "LLM planner" or "deterministic planner".
+- Invalid LLM JSON triggers one schema-repair retry, then falls back to deterministic planning.
+- Card displays "LLM-refined planner" or "deterministic planner".
 
 ## Phase 10: Optional MCP Server
 

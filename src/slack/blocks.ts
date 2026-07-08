@@ -7,6 +7,19 @@ type RenderOptions = {
 
 const cap = (text: string, limit = 280): string => (text.length > limit ? `${text.slice(0, limit - 3)}...` : text);
 
+const evidenceLabel = (sourceType: IncidentPlan["evidence"][number]["sourceType"]): string => {
+  switch (sourceType) {
+    case "rts":
+      return "RTS";
+    case "slack":
+      return "Slack";
+    case "mock":
+      return "Fallback";
+    default:
+      return "Local";
+  }
+};
+
 const statusLine = (plan: IncidentPlan): string => {
   const context =
     plan.statuses.context === "rts"
@@ -16,7 +29,7 @@ const statusLine = (plan: IncidentPlan): string => {
         : "Evidence source: Demo fallback context";
   const weather = plan.statuses.weather === "live" ? "Live weather" : "Mock weather";
   const flood = plan.statuses.flood === "live" ? "Live flood signal" : "Mock flood signal";
-  const planner = plan.statuses.planner === "llm" ? "LLM planner" : "Deterministic planner";
+  const planner = plan.statuses.planner === "llm" ? "LLM-refined planner" : "Deterministic planner";
   return `${context} | ${weather} | ${flood} | ${planner}`;
 };
 
@@ -31,9 +44,13 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
   const evidenceText = plan.evidence
     .slice(0, 4)
     .map((item, index) => {
-      const source = item.permalink ? `<${item.permalink}|${item.channel}>` : item.channel;
-      return `${index + 1}. ${source}: ${cap(item.text, 160)}`;
+      const source = item.permalink && item.sourceType !== "mock" ? `<${item.permalink}|${item.channel}>` : item.channel;
+      return `${index + 1}. *${evidenceLabel(item.sourceType)}* ${source}: ${cap(item.text, 150)}`;
     })
+    .join("\n");
+
+  const signalsText = plan.riskSignals
+    .map((signal) => `*${signal.label}* (${signal.source}): ${cap(signal.summary, 170)}`)
     .join("\n");
 
   const incidentsText = plan.incidents
@@ -73,6 +90,13 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
       text: {
         type: "mrkdwn",
         text: `*Risk Summary*\n${plan.summary}`
+      }
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*External Signals*\n${signalsText || "No weather or flood signal available."}`
       }
     },
     {

@@ -92,9 +92,23 @@ For live recording, set:
 
 ```txt
 SENTINEL_FORCE_MOCKS=false
+SENTINEL_USE_LLM=false
 ```
 
 Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
+
+Optional LLM refinement can be enabled after the live Zone B flow is stable:
+
+```txt
+SENTINEL_USE_LLM=true
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+Do not make this part of the required demo path. If the key is missing, the OpenAI-compatible API fails, or the response does not match the Zod plan schema after one repair attempt, SentinelSwarm must continue with the deterministic fallback planner.
+
+Privacy note: only enable LLM refinement when the Slack reports are fictional or approved for the configured provider. The app redacts raw Slack user IDs, channel IDs, permalinks, and URLs before optional LLM calls, but report text is still sent for planning context.
 
 ## 6. First Smoke Test
 
@@ -104,6 +118,8 @@ Run:
 npm run smoke:slack
 npm run dev
 ```
+
+On Windows PowerShell, use `npm.cmd run smoke:slack` and `npm.cmd run dev` if npm script shims are blocked by execution policy.
 
 Optional write-path check:
 
@@ -137,6 +153,7 @@ Expected:
 - Evidence Ledger is visible.
 - Approve Plan button works.
 - Post to Coordination works after approval.
+- Status indicators show whether RTS/weather/flood used live data or fallback data, and whether planning was deterministic or LLM-refined.
 
 ## 7. Real-Time Search Notes
 
@@ -147,7 +164,7 @@ Important:
 - Bot-token RTS calls require an `action_token`.
 - Slack can include `action_token` in `app_mention` events.
 - This is why the main demo starts with `@SentinelSwarm analyze Zone B risk`.
-- If the token, scopes, or workspace setup fail, SentinelSwarm falls back to mock context and marks that status in the UI.
+- If the token, scopes, or workspace setup fail, SentinelSwarm tries the live Slack channel scan, then falls back to mock context and marks that status in the UI.
 
 ## 8. Troubleshooting
 
@@ -178,6 +195,13 @@ Important:
 - Confirm the app is internal or eligible for RTS.
 - Confirm the app mention payload contains `action_token`.
 - Keep going: SentinelSwarm tries live Slack channel scan next, then mock context, and labels the evidence source in the card.
+
+### LLM Refinement Falls Back
+
+- Confirm `SENTINEL_USE_LLM=true` only when intentionally testing LLM refinement.
+- Confirm `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` are set for the compatible provider.
+- Keep going: the required Slack demo does not depend on the LLM. Missing keys, API failures, and invalid schema output fall back to the deterministic planner.
+- For privacy, keep `SENTINEL_USE_LLM=false` unless demo Slack reports are fictional or approved for the configured provider.
 
 ### Should I Connect Slack As MCP?
 

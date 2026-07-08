@@ -14,7 +14,9 @@ flowchart LR
 
   Bolt --> RTS["Real-Time Search: assistant.search.context"]
   RTS -->|success| Context["Retrieved Slack evidence"]
-  RTS -->|failure or missing token| MockContext["mockContext.json"]
+  RTS -->|failure or missing token| SlackScan["Live Slack channel scan"]
+  SlackScan -->|success| Context
+  SlackScan -->|failure| MockContext["mockContext.json"]
 
   Bolt --> LocalData["Local JSON: zones, routes, shelters, volunteers, supplies"]
   Bolt --> Weather["Open-Meteo Weather API"]
@@ -31,8 +33,9 @@ flowchart LR
   MockFlood --> Planner
 
   Planner --> Fallback["Deterministic Fallback Planner"]
-  Planner --> LLM["Optional LLM Adapter"]
-  LLM --> Schema["Zod Plan Schema"]
+  Planner --> LLM["Optional OpenAI-Compatible LLM Refinement"]
+  LLM -->|valid JSON after schema check| Schema["Zod Plan Schema"]
+  LLM -->|missing key, API failure, invalid schema| Fallback
   Fallback --> Schema
 
   Schema --> Blocks["Block Kit Incident Control Room"]
@@ -48,15 +51,17 @@ flowchart LR
 2. Bolt receives an `app_mention` event through Socket Mode.
 3. Handler extracts the zone and `action_token`.
 4. RTS client tries `assistant.search.context`.
-5. If RTS fails or returns weak results, local `mockContext.json` is used.
-6. Local operational data is loaded from JSON.
-7. Weather and flood tools fetch live data with short timeouts.
-8. Mock weather/flood data replaces failed calls.
-9. Planner creates a structured `IncidentPlan`.
-10. Zod validates the plan.
-11. Block renderer creates a Slack Incident Control Room.
-12. User approves the plan.
-13. User posts the approved plan to `#coordination`.
+5. If RTS fails or returns weak results, SentinelSwarm scans the live demo channels.
+6. If live channel scan fails or returns no useful results, local `mockContext.json` is used.
+7. Local operational data is loaded from JSON.
+8. Weather and flood tools fetch live data with short timeouts.
+9. Mock weather/flood data replaces failed calls.
+10. Planner creates a structured `IncidentPlan`. By default this is deterministic.
+11. If `SENTINEL_USE_LLM=true`, the optional OpenAI-compatible layer may refine the plan.
+12. Zod validates the plan. Invalid LLM JSON is retried once for schema repair, then replaced by the deterministic fallback plan.
+13. Block renderer creates a Slack Incident Control Room.
+14. User approves the plan.
+15. User posts the approved plan to `#coordination`.
 
 ## Slack Event Flow
 
@@ -106,15 +111,18 @@ For the hackathon MVP, state can live in memory. If the process restarts, the us
 flowchart TD
   Start["Analyze request"] --> TryRTS["Try RTS"]
   TryRTS -->|ok| Evidence["Use Slack evidence"]
-  TryRTS -->|error| MockEvidence["Use mockContext.json"]
+  TryRTS -->|error| TrySlackScan["Try live Slack channel scan"]
+  TrySlackScan -->|ok| Evidence
+  TrySlackScan -->|error| MockEvidence["Use mockContext.json"]
   Evidence --> TryWeather["Try weather/flood APIs"]
   MockEvidence --> TryWeather
   TryWeather -->|ok| LiveRisk["Use live risk"]
   TryWeather -->|error| MockRisk["Use mock risk JSON"]
   LiveRisk --> TryLLM["Try LLM planner if configured"]
   MockRisk --> TryLLM
+  TryLLM -->|SENTINEL_USE_LLM=false| Deterministic["Use fallback planner"]
   TryLLM -->|valid schema| Render["Render Block Kit"]
-  TryLLM -->|missing/invalid/error| Deterministic["Use fallback planner"]
+  TryLLM -->|missing key/API error/invalid schema| Deterministic
   Deterministic --> Render
 ```
 
@@ -140,7 +148,17 @@ flowchart TD
 - `SLACK_APP_TOKEN`: `xapp-` Socket Mode app token.
 - `SLACK_SIGNING_SECRET`: optional for future HTTP mode.
 - `SLACK_COORDINATION_CHANNEL_ID`: channel ID for final approved posts.
-- `OPENAI_API_KEY`: optional; app must run without it.
-- `SENTINEL_USE_LLM`: optional feature flag.
-- `SENTINEL_FORCE_MOCKS`: force deterministic demo mode.
+- `SENTINEL_FORCE_MOCKS`: set `false` for the live Zone B Slack demo; set `true` only for fallback rehearsal.
+- `SENTINEL_USE_LLM`: optional feature flag. Keep `false` for the required demo path.
+- `OPENAI_API_KEY`: optional API key for the refinement layer. The app must run without it.
+- `OPENAI_BASE_URL`: optional OpenAI-compatible base URL, for example `https://api.openai.com/v1`.
+- `OPENAI_MODEL`: optional OpenAI-compatible model name.
 - `LOG_LEVEL`: app logging level.
+
+## Optional LLM Refinement Contract
+
+The LLM layer is a refinement path, not a dependency. The required demo must still work with `SENTINEL_USE_LLM=false` and no `OPENAI_API_KEY`.
+
+When enabled, the adapter should call an OpenAI-compatible chat/completions API using `OPENAI_BASE_URL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`, then validate the returned structured plan with Zod. If the key is missing, the provider is unreachable, the response times out, or the JSON fails schema validation after one repair retry, the planner must use the deterministic fallback planner and label that status in the Block Kit card.
+
+Privacy contract: the optional LLM call redacts raw Slack user IDs, channel IDs, permalinks, and URLs before sending planning context to the configured provider. The feature should remain disabled unless Slack reports are fictional or approved for that provider, because the report text itself is still sent.

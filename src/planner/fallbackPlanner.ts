@@ -7,7 +7,7 @@ import type { FloodRisk } from "../tools/flood";
 import type { LocalData, Zone } from "../tools/localData";
 import type { WeatherRisk } from "../tools/weather";
 
-type PlannerInput = {
+export type PlannerInput = {
   zone: Zone;
   localData: LocalData;
   evidence: Evidence[];

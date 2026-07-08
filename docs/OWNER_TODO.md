@@ -40,11 +40,14 @@ This checklist tracks the live Slack product path. Target the primary recording 
 ## Live Evidence Proof
 
 - [ ] With `SENTINEL_FORCE_MOCKS=false`, bot attempts Real-Time Search.
+- [ ] Required demo uses `SENTINEL_USE_LLM=false` unless deliberately recording the optional refinement path.
 - [ ] If RTS is unavailable, bot uses live Slack channel scan.
 - [ ] Card labels the actual evidence source truthfully.
+- [ ] Planner status truthfully labels deterministic fallback or optional LLM refinement.
 - [ ] Evidence snippets come from real Slack messages.
 - [ ] Changing a route/shelter message changes the generated plan.
 - [ ] Mock fallback is tested separately.
+- [ ] Missing `OPENAI_API_KEY`, API failure, or invalid LLM JSON does not block approval or posting.
 
 ## Demo Recording
 

@@ -37,7 +37,10 @@ describe("renderIncidentControlRoom", () => {
 
     expect(rendered).toContain("Incident Control Room");
     expect(rendered).toContain("Evidence Ledger");
+    expect(rendered).toContain("External Signals");
     expect(rendered).toContain("Evidence source: Live Slack channel context");
+    expect(rendered).toContain("Fallback");
+    expect(rendered).not.toContain("example.slack.com");
     expect(rendered).toContain("Approve Plan");
     expect(rendered).toContain("Post to Coordination");
   });

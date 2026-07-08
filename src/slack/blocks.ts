@@ -64,7 +64,7 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
 
   const resourcesText = plan.resourceMatches
     .slice(0, 6)
-    .map((match) => `*${match.type}* ${match.name}: ${cap(match.recommendation, 160)}`)
+    .map((match) => `*${match.type}* ${cap(match.name, 80)}: ${cap(match.recommendation, 160)}`)
     .join("\n");
 
   const actionsText = plan.recommendedActions.map((action, index) => `${index + 1}. ${cap(action, 220)}`).join("\n");

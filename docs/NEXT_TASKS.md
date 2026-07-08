@@ -1,82 +1,67 @@
 # Next Tasks
 
-## What Is Already Created
+This file tracks the immediate work that remains before recording and submission. Keep it updated as the live Slack demo changes.
 
-- Slack app manifest draft: `manifest.yaml`.
-- Environment template: `.env.example`.
-- Slack setup guide: `docs/SLACK_SETUP.md`.
-- Manual setup checklist: `docs/MANUAL_SETUP.md`.
-- Runnable Node.js + TypeScript Slack app skeleton.
-- Seeded Zone B demo data.
-- Deterministic fallback planner.
-- Block Kit Incident Control Room with Evidence Ledger.
-- Approve Plan, Post to Coordination, and Generate Handover handlers.
-- Real-Time Search wrapper with fallback to mock context.
-- Open-Meteo weather/flood wrappers with mock fallback.
-- Basic tests for severity, fallback planner, and Block Kit rendering.
+## Current Status
 
-## Your Immediate Manual Tasks
+- Node.js/TypeScript Slack Bolt app exists.
+- Socket Mode app entrypoint exists.
+- `@SentinelSwarm ping` and `@SentinelSwarm analyze Zone B risk` handlers exist.
+- Incident Control Room Block Kit card exists.
+- RTS attempt, live Slack channel scan fallback, and mock context fallback exist.
+- Weather/flood adapters and mock fallbacks exist.
+- Deterministic planner exists; optional Gemini refinement is guarded by fallbacks.
+- Approval, post to coordination, and handover button handlers exist.
+- Unit tests, typecheck, and build currently pass.
 
-Do these in Slack/Devpost:
+## Immediate Manual Tasks
 
-1. Join the Devpost hackathon.
-2. Create or open your Slack developer sandbox.
-3. Create a Slack app from `manifest.yaml`.
-4. Enable Socket Mode.
-5. Create an app-level token with `connections:write`.
-6. Install the app to the workspace.
-7. Create these channels:
+1. Run the Slack smoke test with real local `.env` values:
+
+```powershell
+npm.cmd run smoke:slack
+```
+
+2. Fix any `FAIL` result from the smoke test before recording.
+3. Invite the bot to all demo channels:
    - `#field-reports`
-   - `#volunteers`
-   - `#supplies`
+   - `#alerts`
    - `#routes`
    - `#shelters`
-   - `#alerts`
+   - `#supplies`
+   - `#volunteers`
    - `#coordination`
-8. Invite SentinelSwarm to all demo channels.
-9. Copy token values into `.env`.
-10. Copy the channel ID for `#coordination` into `.env`.
+4. Confirm `SLACK_COORDINATION_CHANNEL_ID` is a channel ID like `C...`, not `#coordination`.
+5. Seed fictional messages from `docs/DEMO_SEED_MESSAGES.md`.
+   - Preview with `npm.cmd run seed:slack`.
+   - Post intentionally with `npm.cmd run seed:slack -- --post`.
+6. Start the app:
 
-## Local Commands
-
-After `.env` is filled:
-
-```bash
-npm run dev
+```powershell
+npm.cmd run dev
 ```
 
-In Slack:
-
-```txt
-@SentinelSwarm ping
-```
-
-Then:
+7. Test the exact flow:
 
 ```txt
 @SentinelSwarm analyze Zone B risk
+Approve Plan
+Post to Coordination
+Generate Handover
 ```
 
-## Next Coding Task
+## Coding Tasks Still Worth Doing
 
-After your Slack app tokens are in `.env`, run the live Slack smoke test.
+- Add a narrow test for missing `SLACK_COORDINATION_CHANNEL_ID` returning the readable setup hint.
+- Add a narrow test for `generate_handover` posting into the original thread.
+- Add a small no-secrets check script before submission.
+- Consider a single end-to-end mocked handler test for app mention -> plan store -> button actions.
+- Review Slack Block Kit payload sizes after any future LLM prompt or schema changes.
 
-Expected result:
+## Do Not Add Before Recording
 
-```txt
-@SentinelSwarm ping
--> bot replies
-
-@SentinelSwarm analyze Zone B risk
--> Incident Control Room appears
--> Approve Plan works
--> Post to Coordination works
-```
-
-If Slack setup fails, capture the exact Slack error and fix setup before adding LLM or MCP.
-
-## MCP Decision
-
-Do not connect Slack as MCP now.
-
-Only add MCP if the core demo is already stable. If added, make it a tiny SentinelSwarm resource MCP server for shelter/supply/weather data, not a second Slack integration.
+- New external APIs.
+- Autonomous background dispatch.
+- Database or queue infrastructure.
+- MCP dependency in the core demo path.
+- Any feature that requires new Slack scopes unless the existing live demo is already recorded.

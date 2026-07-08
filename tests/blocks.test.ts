@@ -86,6 +86,11 @@ describe("renderIncidentControlRoom", () => {
         routeName: longText,
         recommendation: longText
       })),
+      resourceMatches: Array.from({ length: 8 }, (_, index) => ({
+        type: index % 3 === 0 ? ("volunteer" as const) : index % 3 === 1 ? ("shelter" as const) : ("supply" as const),
+        name: longText,
+        recommendation: longText
+      })),
       recommendedActions: Array.from({ length: 8 }, () => longText)
     });
 

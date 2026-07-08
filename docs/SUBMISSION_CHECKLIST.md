@@ -28,6 +28,7 @@
   - Faster handoffs and reduced duplicated work.
 - Demo video link.
 - Architecture diagram.
+- Screenshot or GIF of the Incident Control Room, if available after recording.
 - Slack developer sandbox URL.
 - Testing instructions.
 
@@ -35,6 +36,7 @@
 
 - Storyboard source: `docs/DEMO_VIDEO_STORYBOARD.md`.
 - Seed message source: `docs/DEMO_SEED_MESSAGES.md`.
+- Optional seed command: `npm.cmd run seed:slack -- --post`.
 - Length is under 3 minutes.
 - Video shows the working Slack project, not only slides.
 - No secrets, tokens, private data, copyrighted music, or real personal information are visible.
@@ -106,6 +108,7 @@ Optional:
 Only if an LLM adapter is implemented:
 
 - `GOOGLE_API_KEY`
+- `GEMINI_MODEL`
 - `SENTINEL_USE_LLM`
 
 Never commit real `.env` values.
@@ -117,6 +120,7 @@ Run these before recording and before submission:
 - `npm run build`
 - `npm test`
 - Start app in Socket Mode.
+- Seed Slack with `npm.cmd run seed:slack -- --post` or manually paste `docs/DEMO_SEED_MESSAGES.md`.
 - In Slack, run `@SentinelSwarm ping`.
 - In Slack, run `@SentinelSwarm analyze Zone B risk`.
 - Confirm the card appears in thread.
@@ -125,7 +129,8 @@ Run these before recording and before submission:
 - Click Post to Coordination.
 - Confirm `#coordination` receives final plan.
 - Force mock mode and repeat once.
-- Confirm the card shows `Deterministic planner`, and repeat once with mock mode forced.
+- Confirm the card labels mock context/weather/flood when mock mode is forced.
+- Confirm the card shows `Deterministic planner` when `SENTINEL_USE_LLM=false`.
 - Confirm no token or secret appears in logs or video.
 - Confirm the project still makes sense if MCP is not used.
 

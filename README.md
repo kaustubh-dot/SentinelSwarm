@@ -13,6 +13,15 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 -> #coordination receives the final action plan
 ```
 
+## 3-Minute Judge Flow
+
+1. Show seeded Slack chaos across `#alerts`, `#field-reports`, `#routes`, `#shelters`, `#supplies`, and `#volunteers`.
+2. In `#field-reports`, run `@SentinelSwarm analyze Zone B risk`.
+3. Review the Block Kit Incident Control Room: evidence, source statuses, risk signals, severity, routes, shelter, volunteers, supplies, and recommended plan.
+4. Click `Approve Plan`.
+5. Click `Post to Coordination`.
+6. Show the final approved plan in `#coordination`.
+
 ## Why It Is Roadblock-Safe
 
 The app is designed to work even if external services fail:
@@ -44,11 +53,30 @@ See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/M
 ## Demo And Submission Assets
 
 - [Demo seed messages](docs/DEMO_SEED_MESSAGES.md)
+- [Demo script](docs/DEMO_SCRIPT.md)
 - [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
 - [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
 - [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
 - [Judge Q&A](docs/JUDGE_QA.md)
 - [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
+
+Operator/internal planning docs such as `OWNER_TODO.md`, `OWNER_LIVE_RUNBOOK.md`, `NEXT_TASKS.md`, `ROADMAP.md`, and `IMPLEMENTATION_TASKS.md` are kept in `docs/` so the remaining live-demo work stays visible.
+
+## Seed The Demo Workspace
+
+Preview the fictional Zone B seed pack without touching Slack:
+
+```powershell
+npm.cmd run seed:slack
+```
+
+After the sandbox channels exist and the bot is invited, post the seed pack intentionally:
+
+```powershell
+npm.cmd run seed:slack -- --post
+```
+
+The seed command never sends the bot mention. Trigger the demo yourself from `#field-reports` with `@SentinelSwarm analyze Zone B risk`.
 
 ## Optional Gemini Refinement
 
@@ -85,6 +113,7 @@ On Windows PowerShell, prefer the `.cmd` forms if script execution policy blocks
 ```powershell
 npm.cmd test
 npm.cmd run build
+npm.cmd run seed:slack
 npm.cmd run smoke:slack
 npm.cmd run dev
 ```

@@ -45,41 +45,25 @@ Keep that terminal running.
 
 ## 2. Seed Channels
 
-Post short, realistic messages before recording.
+Post short, realistic messages before recording. Prefer the seed script so the sandbox story is consistent across rehearsals.
 
 Use fictional data only. Do not use real personal information, phone numbers, addresses, or secrets.
 
-Suggested live seed pack:
+Preview what will be posted:
 
-```txt
-#alerts
-Weather desk: rainfall intensity increasing near Zone B for the next 90 minutes. Riverside Lane and the old bus depot area should be treated as high risk.
+```powershell
+npm.cmd run seed:slack
 ```
 
-```txt
-#field-reports
-Zone B field update: water rising near Riverside Lane. 25 residents need evacuation support, including elderly residents and two children. Bridge access is blocked.
+When the channels exist and the bot is invited, post the fictional seed pack:
+
+```powershell
+npm.cmd run seed:slack -- --post
 ```
 
-```txt
-#routes
-Zone B route update: Route R2 through Riverside Lane is blocked by overflow. Route R4 via Hill School Road is open for emergency vehicles.
-```
+The script does not post the bot mention. Trigger SentinelSwarm manually from `#field-reports`.
 
-```txt
-#shelters
-Hill School shelter has 18 free beds, generator backup, and blankets for Zone B evacuees tonight.
-```
-
-```txt
-#supplies
-Main depot has 40 water cans, 25 blankets, 12 first-aid kits, and a driver available if the route is confirmed.
-```
-
-```txt
-#volunteers
-Anika and Dev are available near Zone B with a 4x4 from 5pm to 9pm. Maya can coordinate phone check-ins for the next 3 hours.
-```
+Manual fallback: paste the full seed pack from `docs/DEMO_SEED_MESSAGES.md`. Keep the manual messages aligned with that file so the expected route, shelter, volunteer, and supply story stays consistent.
 
 ## 3. Live Test Flow
 
@@ -98,7 +82,7 @@ SentinelSwarm is online.
 Then run the main demo message in `#field-reports`:
 
 ```txt
-@SentinelSwarm heavy rain near Zone B, water rising near Riverside Lane, 25 people need evacuation, Route R2 blocked
+@SentinelSwarm analyze Zone B risk
 ```
 
 Expected:
@@ -125,7 +109,7 @@ If RTS falls back, do not panic. Say:
 SentinelSwarm attempts Slack Real-Time Search first, then gracefully falls back while clearly labeling the evidence source.
 ```
 
-For a strong proof that the app is not hardcoded:
+For a strong proof that the app is not hardcoded, use `SENTINEL_FORCE_MOCKS=false` and verify the card status shows Real-Time Search or live Slack channel context:
 
 1. Change the `#routes` message.
 2. Rerun the incident.

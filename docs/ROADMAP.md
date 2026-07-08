@@ -1,171 +1,94 @@
-# SentinelSwarm Roadmap
+# Roadmap
 
-## North Star
+SentinelSwarm is a demo-first Slack Agent for Good. The roadmap below separates must-finish demo work from future product ideas so the 3-minute submission stays reliable.
 
-Build SentinelSwarm as a Slack Agent for Good that turns monsoon flood response chaos in Zone B into an evidence-linked, prioritized, human-approved action plan inside Slack.
+## Milestone 1: Core Slack Workflow
 
-The demo must work even if Real-Time Search, weather/flood APIs, and the LLM all fail.
+Status: mostly implemented.
 
-## Critical Path
+Done:
 
-### Milestone 1: Slack Setup Proof
+- Slack Bolt app in Socket Mode.
+- App mention handler.
+- Incident Control Room Block Kit renderer.
+- Approve, Post to Coordination, and Generate Handover button handlers.
+- Local plan store for approval state.
 
-Goal: remove the biggest unknown first.
+Remaining:
 
-Deliver:
+- Run live smoke test in the Slack sandbox.
+- Confirm button interactivity works in the installed app.
+- Confirm final post succeeds in `#coordination`.
 
-- Slack sandbox created.
-- Slack app installed.
-- Socket Mode enabled.
-- `app_mention` subscribed.
-- Interactivity enabled.
-- `@SentinelSwarm ping` reaches the local app.
-- Confirmation whether `app_mention` includes `action_token`.
+## Milestone 2: Evidence Retrieval
 
-Success test:
+Status: implemented, needs live verification.
 
-```txt
-@SentinelSwarm ping
--> bot replies in Slack
-```
+Done:
 
-### Milestone 2: Deterministic Local Brain
+- `assistant.search.context` RTS attempt from app mention `action_token`.
+- Slack channel scan fallback.
+- Local `mockContext.json` fallback.
+- Source status line in the card.
 
-Goal: make the demo independent of APIs.
+Remaining:
 
-Deliver:
+- Confirm whether the live app mention payload includes `action_token`.
+- Record what happens when RTS is unavailable.
+- Make sure seeded Slack messages create a strong Evidence Ledger.
 
-- Local JSON for Zone B, shelters, routes, volunteers, supplies, mock context, mock weather, and mock flood risk.
-- Deterministic planner.
+## Milestone 3: Risk And Planning
+
+Status: implemented for the demo story.
+
+Done:
+
+- Weather adapter with mock fallback.
+- Flood adapter with mock fallback.
 - Severity scoring.
-- Evidence Ledger structure.
+- Incident parsing.
+- Route, shelter, volunteer, and supply matching.
+- Deterministic fallback planner.
+- Optional Gemini refinement with schema validation and retry.
 
-Success test:
+Remaining:
 
-```txt
-npm test
--> fallback planner produces a complete Zone B incident plan
-```
+- Keep the main recording on deterministic mode unless Gemini has been tested separately.
+- Add one or two more handler-level tests if time allows.
+- Avoid adding new APIs before recording.
 
-### Milestone 3: Incident Control Room
+## Milestone 4: Judge-Ready Materials
 
-Goal: make the Slack response feel premium and specific.
+Status: mostly implemented.
 
-Deliver:
-
-- Block Kit Incident Control Room.
-- Evidence Ledger.
-- Risk summary.
-- Route conflict.
-- Shelter, supply, and volunteer matches.
-- Status indicators for RTS/weather/flood/planner.
-- Human approval disclaimer.
-
-Success test:
-
-```txt
-@SentinelSwarm analyze Zone B risk
--> thread contains a readable Incident Control Room
-```
-
-### Milestone 4: Approval And Coordination
-
-Goal: complete the end-to-end workflow.
-
-Deliver:
-
-- Approve Plan button.
-- Post to Coordination button.
-- In-memory plan state.
-- Final clean `#coordination` post.
-
-Success test:
-
-```txt
-Approve Plan
--> plan marked approved
-Post to Coordination
--> #coordination receives final plan
-```
-
-### Milestone 5: RTS Integration
-
-Goal: satisfy and showcase the required Slack technology.
-
-Deliver:
-
-- `assistant.search.context` wrapper.
-- `action_token` extraction.
-- RTS status badge.
-- Evidence snippets from RTS results when available.
-- Graceful fallback through live Slack channel scan, then `mockContext.json`.
-
-Success test:
-
-```txt
-@SentinelSwarm analyze Zone B risk
--> card shows either "Real-Time Search used" or "Fallback context used"
-```
-
-### Milestone 6: Weather/Flood Signal
-
-Goal: add real-world context without adding demo risk.
-
-Deliver:
-
-- Open-Meteo weather fetch.
-- Open-Meteo flood fetch where feasible.
-- Short timeout and mock fallback.
-- Status indicators.
-
-Success test:
-
-```txt
-Network off or API fails
--> demo still works with mock risk data
-```
-
-### Milestone 7: Judge-Ready Polish
-
-Goal: make the project easy to understand in under 3 minutes.
-
-Deliver:
+Done:
 
 - README.
-- `docs/SLACK_SETUP.md`.
-- Final `docs/DEMO_SCRIPT.md`.
-- Architecture diagram export.
-- Devpost copy.
-- Demo video.
-- Judge sandbox access.
+- Slack setup docs.
+- Manual setup docs.
+- Demo seed messages.
+- Demo video storyboard.
+- Devpost submission draft.
+- Judge Q&A.
+- Architecture docs and diagram.
+- Submission checklist.
 
-Success test:
+Remaining:
 
-```txt
-Fresh viewer understands the problem, Slack-native solution, RTS usage, and social impact in the first 60 seconds.
-```
+- Capture live demo video.
+- Add final video link to Devpost.
+- Final no-secrets review.
+- Confirm repo is public or judge-accessible.
 
-## Optional After Core Works
+## Future Work After Submission
 
-### Optional LLM Adapter
-
-Add only after the deterministic planner works end to end.
-
-The app must run without `GOOGLE_API_KEY`.
-
-### Optional MCP Server
-
-Do not connect Slack as MCP for the first version.
-
-If there is time, add a small SentinelSwarm MCP server for local crisis resources:
-
-- `get_zone_resource_status`
-- `get_shelter_capacity`
-- `get_supply_inventory`
-- `get_weather_risk_snapshot`
-
-This gives a clean MCP story without duplicating Slack auth or risking the main demo.
+- Multi-zone incident views.
+- Admin UI for updating local resources.
+- Better handover export for shift changes.
+- More calibrated flood-risk source integration.
+- Optional MCP resource server only after the Slack-native path remains stable.
+- Persistent storage for plan history and audit trails.
 
 ## Freeze Rule
 
-Once Milestone 4 works, do not add risky platform features until the demo video is recorded.
+Once the live Slack flow is working, stop feature work and record. Bug fixes, copy edits, and no-secrets checks are allowed; new platform integrations are not.

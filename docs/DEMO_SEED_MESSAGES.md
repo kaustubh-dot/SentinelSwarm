@@ -1,6 +1,22 @@
 # Demo Seed Messages
 
-Paste these fictional messages into the Slack sandbox before recording. They make the workspace look busy enough for Real-Time Search while keeping the story narrow: monsoon flood response in Zone B.
+Post these fictional messages into the Slack sandbox before recording. They make the workspace look busy enough for Real-Time Search while keeping the story narrow: monsoon flood response in Zone B.
+
+## Recommended Seed Command
+
+Preview the seed plan without posting:
+
+```powershell
+npm.cmd run seed:slack
+```
+
+Post the seed messages only when the sandbox channels exist and the bot is invited:
+
+```powershell
+npm.cmd run seed:slack -- --post
+```
+
+The script posts the channel messages below, but it does not post the `@SentinelSwarm` trigger. Send the bot mention manually from `#field-reports` when you are ready to test or record.
 
 ## Channels
 
@@ -12,7 +28,7 @@ Paste these fictional messages into the Slack sandbox before recording. They mak
 - `#volunteers`
 - `#coordination`
 
-## Paste Order
+## Manual Paste Order
 
 1. `#alerts`
 2. `#routes`

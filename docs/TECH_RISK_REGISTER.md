@@ -20,8 +20,8 @@ Build order must protect the demo first:
 
 | Risk | Symptom | Impact | Prevention | Fallback |
 | --- | --- | --- | --- | --- |
-| RTS missing `action_token` | `assistant.search.context` returns auth or token error | Required tech is fragile in demo | Use `app_mention` as the main trigger and log whether token exists | Use live Slack channel scan, then `mockContext.json`; show the source badge |
-| RTS scopes incomplete | Search returns missing scope or empty results | Live context unavailable | Request `search:read.public`, `app_mentions:read`, `chat:write`, and verify RTS-specific setup early | Use live Slack channel scan; seeded context JSON mirrors Slack messages |
+| RTS missing `action_token` | `assistant.search.context` returns auth or token error | Required tech is fragile in demo | Use `app_mention` as the main trigger and log whether token exists | Use `mockContext.json` as the guaranteed fallback; enrich with live Slack channel scan when available |
+| RTS scopes incomplete | Search returns missing scope or empty results | Live context unavailable | Request `search:read.public`, `app_mentions:read`, `chat:write`, and verify RTS-specific setup early | Use seeded context JSON; optional live Slack scan can add evidence when channel access works |
 | RTS unavailable for app type | Slack app cannot call RTS in sandbox/config | Could threaten required-tech proof | Confirm app is internal and AI-enabled; document RTS attempt and status | Keep RTS code path implemented and visibly attempted; use fallback for demo |
 | Semantic search not enabled | Natural-language query returns poor results | Less impressive retrieval | Use keyword-rich queries and `disable_semantic_search` toggle if needed | Search seeded mock records by zone and incident terms |
 | Slack app not receiving mentions | Bot stays silent | Demo blocked | Enable Socket Mode, subscribe to `app_mention`, invite bot to channels | Add `/sentinel` later only if needed; keep local CLI test for planner |

@@ -34,10 +34,13 @@ describe("formatCoordinationPost", () => {
     const post = formatCoordinationPost(plan, "Kaustubh");
 
     expect(post).toContain("Approved by");
-    expect(post).toContain("Why");
+    expect(post).toContain("approved dispatch handoff");
+    expect(post).toContain("Owner tasks");
+    expect(post).toContain("Evidence checked");
     expect(post).toContain("Assignments and resources");
     expect(post).toContain("Recommended actions");
-    expect(post).toContain("Route guidance");
+    expect(post).toContain("Route instructions");
+    expect(post).toContain("Next review");
   });
 
   it("caps verbose planner text in the final coordination post", () => {

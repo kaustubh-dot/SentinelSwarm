@@ -54,6 +54,15 @@ const parseJsonObject = (content: string): unknown => {
   }
 };
 
+const geminiGenerateContentUrl = (model: string): string => {
+  const modelPath = model.startsWith("models/") ? model : `models/${model}`;
+  const encodedModelPath = modelPath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `https://generativelanguage.googleapis.com/v1beta/${encodedModelPath}:generateContent`;
+};
+
 const geminiText = (payload: unknown): string | undefined => {
   if (typeof payload !== "object" || payload === null) {
     return undefined;
@@ -62,17 +71,18 @@ const geminiText = (payload: unknown): string | undefined => {
   const response = payload as {
     output_text?: string;
     outputText?: string;
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }>;
   };
 
-  return (
+  const text =
     response.output_text ??
     response.outputText ??
     response.candidates?.[0]?.content?.parts
       ?.map((part) => part.text)
-      .filter((text): text is string => Boolean(text))
-      .join("")
-  );
+      .filter((text): text is string => typeof text === "string" && text.length > 0)
+      .join("");
+
+  return text && text.length > 0 ? text : undefined;
 };
 
 const callGeminiPlanner = async (
@@ -83,7 +93,7 @@ const callGeminiPlanner = async (
 ): Promise<LlmPlanPatch> => {
   const prompt = buildPlannerRefinementPrompt(input, deterministicPlan, repairHint);
   const response = await timeoutFetch(
-    "https://generativelanguage.googleapis.com/v1beta/interactions",
+    geminiGenerateContentUrl(config.geminiModel),
     {
       method: "POST",
       headers: {
@@ -91,12 +101,22 @@ const callGeminiPlanner = async (
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: config.geminiModel,
-        system_instruction: "You are SentinelSwarm's emergency coordination planning assistant. Return strict JSON only.",
-        input: prompt,
-        generation_config: {
+        systemInstruction: {
+          parts: [
+            {
+              text: "You are SentinelSwarm's emergency coordination planning assistant. Return strict JSON only."
+            }
+          ]
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
           temperature: 0.2,
-          response_mime_type: "application/json"
+          responseMimeType: "application/json"
         }
       })
     },
@@ -116,10 +136,55 @@ const callGeminiPlanner = async (
   return LlmPlanPatchSchema.parse(parseJsonObject(content));
 };
 
-const mergePatch = (deterministicPlan: IncidentPlan, patch: LlmPlanPatch): IncidentPlan =>
-  IncidentPlanSchema.parse({
+const ensureGroundedPatch = (deterministicPlan: IncidentPlan, patch: LlmPlanPatch): void => {
+  const evidenceIds = new Set(deterministicPlan.evidence.map((item) => item.id));
+  const incidentsById = new Map(deterministicPlan.incidents.map((incident) => [incident.id, incident]));
+  const knownOwners = new Set([
+    ...deterministicPlan.incidents.map((incident) => incident.recommendedOwner),
+    ...deterministicPlan.resourceMatches.filter((match) => match.type === "volunteer").map((match) => match.name)
+  ]);
+  const routesById = new Map(deterministicPlan.routeActions.map((route) => [route.routeId, route]));
+  const resources = new Set(deterministicPlan.resourceMatches.map((match) => `${match.type}:${match.name}`));
+
+  for (const incident of patch.incidents) {
+    const deterministicIncident = incidentsById.get(incident.id);
+    if (!deterministicIncident) {
+      throw new Error(`LLM patch referenced unknown incident ${incident.id}`);
+    }
+    const unknownEvidenceId = incident.evidenceIds.find((id) => !evidenceIds.has(id));
+    if (unknownEvidenceId) {
+      throw new Error(`LLM patch referenced unknown evidence ${unknownEvidenceId}`);
+    }
+    if (!knownOwners.has(incident.recommendedOwner)) {
+      throw new Error(`LLM patch referenced unknown owner ${incident.recommendedOwner}`);
+    }
+  }
+
+  for (const route of patch.routeActions) {
+    const deterministicRoute = routesById.get(route.routeId);
+    if (!deterministicRoute) {
+      throw new Error(`LLM patch referenced unknown route ${route.routeId}`);
+    }
+    if (route.routeName !== deterministicRoute.routeName || route.status !== deterministicRoute.status) {
+      throw new Error(`LLM patch changed route facts for ${route.routeId}`);
+    }
+  }
+
+  for (const match of patch.resourceMatches) {
+    if (!resources.has(`${match.type}:${match.name}`)) {
+      throw new Error(`LLM patch referenced unknown resource ${match.type}:${match.name}`);
+    }
+  }
+};
+
+const mergePatch = (deterministicPlan: IncidentPlan, patch: LlmPlanPatch): IncidentPlan => {
+  ensureGroundedPatch(deterministicPlan, patch);
+
+  return IncidentPlanSchema.parse({
     ...deterministicPlan,
     ...patch,
+    severity: deterministicPlan.severity,
+    confidence: deterministicPlan.confidence,
     statuses: {
       ...deterministicPlan.statuses,
       planner: "llm"
@@ -127,6 +192,7 @@ const mergePatch = (deterministicPlan: IncidentPlan, patch: LlmPlanPatch): Incid
     evidence: deterministicPlan.evidence,
     riskSignals: deterministicPlan.riskSignals
   });
+};
 
 export const refinePlanWithLlm = async (
   config: LlmPlannerConfig,

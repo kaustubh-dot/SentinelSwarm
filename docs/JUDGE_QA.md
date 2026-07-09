@@ -14,7 +14,7 @@ Bot-token RTS calls require an `action_token`, which is available on user-initia
 
 ## What happens if Real-Time Search fails?
 
-The app tries live Slack channel scan next, then falls back to `src/data/mockContext.json` if no live context is available. The Incident Control Room labels whether evidence came from RTS, live Slack channel context, or demo fallback context.
+The app immediately uses `src/data/mockContext.json` as the deterministic fallback, then optionally enriches that evidence with live Slack channel scan results if channel access works. The Incident Control Room labels whether evidence came from RTS, optional Slack scan enrichment, or fallback context.
 
 ## How do you prove it is not hardcoded?
 

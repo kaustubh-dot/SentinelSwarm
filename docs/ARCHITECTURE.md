@@ -14,9 +14,10 @@ flowchart LR
 
   Bolt --> RTS["Real-Time Search: assistant.search.context"]
   RTS -->|success| Context["Retrieved Slack evidence"]
-  RTS -->|failure or missing token| SlackScan["Live Slack channel scan"]
-  SlackScan -->|success| Context
-  SlackScan -->|failure| MockContext["mockContext.json"]
+  RTS -->|failure or missing token| MockContext["mockContext.json"]
+  MockContext --> Context
+  MockContext -. optional enrichment .-> SlackScan["Live Slack channel scan"]
+  SlackScan --> Context
 
   Bolt --> LocalData["Local JSON: zones, routes, shelters, volunteers, supplies"]
   Bolt --> Weather["Open-Meteo Weather API"]
@@ -51,8 +52,8 @@ flowchart LR
 2. Bolt receives an `app_mention` event through Socket Mode.
 3. Handler extracts the zone and `action_token`.
 4. RTS client tries `assistant.search.context`.
-5. If RTS fails or returns weak results, SentinelSwarm scans the live demo channels.
-6. If live channel scan fails or returns no useful results, local `mockContext.json` is used.
+5. If RTS fails or returns weak results, local `mockContext.json` is used as the guaranteed fallback.
+6. When Slack channel access is available, the app optionally enriches fallback evidence with live demo-channel scan results.
 7. Local operational data is loaded from JSON.
 8. Weather and flood tools fetch live data with short timeouts.
 9. Mock weather/flood data replaces failed calls.
@@ -78,8 +79,8 @@ sequenceDiagram
   alt RTS succeeds
     R-->>A: messages, files, permalinks
   else RTS unavailable
-    A->>A: scan live demo channels
-    A->>A: load mockContext.json if live scan is unavailable
+    A->>A: load mockContext.json
+    A->>A: optionally scan live demo channels for enrichment
   end
   A->>A: combine context + local resources + risk signals
   A-->>S: Threaded Block Kit Incident Control Room
@@ -116,9 +117,10 @@ For the hackathon MVP, state can live in memory. If the process restarts, the us
 flowchart TD
   Start["Analyze request"] --> TryRTS["Try RTS"]
   TryRTS -->|ok| Evidence["Use Slack evidence"]
-  TryRTS -->|error| TrySlackScan["Try live Slack channel scan"]
+  TryRTS -->|error| MockEvidence["Use mockContext.json"]
+  MockEvidence --> TrySlackScan["Try optional live Slack enrichment"]
   TrySlackScan -->|ok| Evidence
-  TrySlackScan -->|error| MockEvidence["Use mockContext.json"]
+  TrySlackScan -->|error or empty| Evidence
   Evidence --> TryWeather["Try weather/flood APIs"]
   MockEvidence --> TryWeather
   TryWeather -->|ok| LiveRisk["Use live risk"]

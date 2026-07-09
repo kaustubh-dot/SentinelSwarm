@@ -163,7 +163,7 @@ Important:
 - Bot-token RTS calls require an `action_token`.
 - Slack can include `action_token` in `app_mention` events.
 - This is why the main demo starts with `@SentinelSwarm analyze Zone B risk`.
-- If the token, scopes, or workspace setup fail, SentinelSwarm tries the live Slack channel scan, then falls back to mock context and marks that status in the UI.
+- If the token, scopes, or workspace setup fail, SentinelSwarm uses mock context as the guaranteed fallback, then optionally enriches with live Slack channel scan evidence and marks that status in the UI.
 
 ## 8. Troubleshooting
 
@@ -193,7 +193,7 @@ Important:
 - Confirm `search:read.public` is installed.
 - Confirm the app is internal or eligible for RTS.
 - Confirm the app mention payload contains `action_token`.
-- Keep going: SentinelSwarm tries live Slack channel scan next, then mock context, and labels the evidence source in the card.
+- Keep going: SentinelSwarm uses mock context as the guaranteed fallback, optionally enriches with live Slack channel scan evidence, and labels the evidence source in the card.
 
 ### Gemini Refinement Falls Back
 

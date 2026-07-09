@@ -9,7 +9,7 @@
 | Address social impact | Disaster-response coordination for floods, landslides, and local emergencies | Devpost impact section, `docs/PROJECT_PLAN.md` |
 | Run consistently as shown | Vertical slice has deterministic fallback for every external dependency | tests, fallback demo mode, `docs/TECH_RISK_REGISTER.md` |
 | Demo video under 3 minutes | Scripted 2:45-2:55 demo with one clean flow | `docs/DEMO_SCRIPT.md` |
-| Architecture diagram | Mermaid diagram plus export-ready screenshot | `docs/ARCHITECTURE.md` |
+| Architecture diagram | Mermaid diagram plus export-ready screenshot | `docs/ARCHITECTURE_DIAGRAM.md` |
 | Slack developer sandbox URL | Provide sandbox workspace URL and invite judges | `docs/SUBMISSION_CHECKLIST.md` |
 | Judge access | Add `slackhack@salesforce.com` and `testing@devpost.com` | sandbox checklist |
 | No confidential or sensitive information | Use fictional seeded crisis data only | seeded data review checklist |
@@ -44,7 +44,7 @@
 | Feature description | README and Devpost copy | Mentions RTS, evidence, resource matching, approval |
 | Social impact | Devpost impact field | Explains disaster response and human approval |
 | Demo video | `docs/DEMO_SCRIPT.md` | Public link, under 3 minutes, working project footage |
-| Architecture diagram | `docs/ARCHITECTURE.md` | Mermaid diagram exported or screenshotted |
+| Architecture diagram | `docs/ARCHITECTURE_DIAGRAM.md` | Mermaid diagram exported or screenshotted |
 | Slack sandbox URL | Devpost form | URL works for invited judges |
 | Judge access | Slack workspace | Both required emails invited before deadline |
 | Testing instructions | README | Exact command and Slack mention included |

@@ -3,9 +3,26 @@ import path from "node:path";
 import { z } from "zod";
 import { EvidenceSchema, IncidentPlanSchema, type Evidence, type IncidentPlan } from "../planner/schema";
 
+const ContextProvenanceSchema = z.object({
+  rts: z.object({
+    attempted: z.boolean(),
+    matched: z.number().int().min(0),
+    reason: z.string().optional()
+  }),
+  fallback: z.enum(["mockContext.json", "none"]),
+  slackScan: z.object({
+    attempted: z.boolean(),
+    matched: z.number().int().min(0),
+    reason: z.string().optional()
+  })
+});
+
+export type ContextProvenance = z.infer<typeof ContextProvenanceSchema>;
+
 export type StoredPlan = {
   plan: IncidentPlan;
   reportEvidence?: Evidence;
+  contextProvenance?: ContextProvenance;
   approvedBy?: string;
   messageTs?: string;
   sourceChannel?: string;
@@ -13,12 +30,14 @@ export type StoredPlan = {
   state: "draft" | "approved" | "posted";
   refreshCount?: number;
   lastRefreshedAt?: string;
+  lastChangeSummary?: string[];
   updatedAt: string;
 };
 
 const StoredPlanSchema = z.object({
   plan: IncidentPlanSchema,
   reportEvidence: EvidenceSchema.optional(),
+  contextProvenance: ContextProvenanceSchema.optional(),
   approvedBy: z.string().optional(),
   messageTs: z.string().optional(),
   sourceChannel: z.string().optional(),
@@ -26,6 +45,7 @@ const StoredPlanSchema = z.object({
   state: z.enum(["draft", "approved", "posted"]),
   refreshCount: z.number().int().min(0).optional(),
   lastRefreshedAt: z.string().optional(),
+  lastChangeSummary: z.array(z.string()).optional(),
   updatedAt: z.string()
 });
 

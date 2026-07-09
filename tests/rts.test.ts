@@ -29,7 +29,7 @@ describe("searchSlackContext", () => {
     expect(context.evidence[0].sourceType).toBe("rts");
   });
 
-  it("falls back to live channel history when RTS action token is missing", async () => {
+  it("uses mock context as the guaranteed fallback and enriches with live channel history", async () => {
     const client = createClient(async (method, params) => {
       if (method === "conversations.list") {
         return {
@@ -58,10 +58,20 @@ describe("searchSlackContext", () => {
 
     const context = await searchSlackContext(client, undefined, "Zone A", false);
 
-    expect(context.status).toBe("slack");
+    expect(context.status).toBe("mock");
     expect(context.reason).toContain("No action_token");
-    expect(context.evidence[0].source).toBe("Live Slack channel scan");
-    expect(context.evidence[0].text).toContain("R2");
+    expect(context.reason).toContain("Using deterministic mockContext.json fallback");
+    expect(context.provenance.rts).toMatchObject({
+      attempted: false,
+      matched: 0
+    });
+    expect(context.provenance.fallback).toBe("mockContext.json");
+    expect(context.provenance.slackScan).toMatchObject({
+      attempted: true,
+      matched: 1
+    });
+    expect(context.evidence.some((item) => item.sourceType === "mock")).toBe(true);
+    expect(context.evidence.some((item) => item.source === "Live Slack channel scan" && item.text.includes("R2"))).toBe(true);
   });
 
   it("does not collect explicit messages for another zone during channel scan", async () => {
@@ -95,12 +105,13 @@ describe("searchSlackContext", () => {
 
     const context = await searchSlackContext(client, undefined, "Zone A", false);
 
-    expect(context.status).toBe("slack");
-    expect(context.evidence).toHaveLength(1);
-    expect(context.evidence[0].text).toContain("Zone A");
+    expect(context.status).toBe("mock");
+    const liveEvidence = context.evidence.filter((item) => item.source === "Live Slack channel scan");
+    expect(liveEvidence).toHaveLength(1);
+    expect(liveEvidence[0].text).toContain("Zone A");
   });
 
-  it("ignores unusable RTS wrapper results and falls back to channel scan", async () => {
+  it("ignores unusable RTS wrapper results and falls back to mock context before channel scan enrichment", async () => {
     const client = createClient(async (method) => {
       if (method === "assistant.search.context") {
         return {
@@ -138,9 +149,40 @@ describe("searchSlackContext", () => {
 
     const context = await searchSlackContext(client, "action-token", "Zone A", false);
 
-    expect(context.status).toBe("slack");
+    expect(context.status).toBe("mock");
     expect(context.reason).toContain("RTS returned no usable message results");
-    expect(context.evidence[0].text).toContain("Route R4");
+    expect(context.reason).toContain("Using deterministic mockContext.json fallback");
+    expect(context.provenance.rts).toMatchObject({
+      attempted: true,
+      matched: 0
+    });
+    expect(context.provenance.slackScan.matched).toBe(1);
+    expect(context.evidence.some((item) => item.sourceType === "mock")).toBe(true);
+    expect(context.evidence.some((item) => item.source === "Live Slack channel scan" && item.text.includes("Route R4"))).toBe(true);
+  });
+
+  it("redacts action_token values from RTS fallback reasons", async () => {
+    const token = "xoxe-action-secret-token";
+    const client = createClient(async (method) => {
+      if (method === "assistant.search.context") {
+        throw new Error(`Slack rejected action token ${token}`);
+      }
+
+      if (method === "conversations.list") {
+        return {
+          channels: []
+        };
+      }
+
+      throw new Error(`Unexpected method ${method}`);
+    });
+
+    const context = await searchSlackContext(client, token, "Zone B", false);
+
+    expect(context.status).toBe("mock");
+    expect(context.reason).toContain("[redacted-action-token]");
+    expect(context.reason).not.toContain(token);
+    expect(context.provenance.rts.reason).toContain("[redacted-action-token]");
   });
 
   it("normalizes nested Real-Time Search result groups", async () => {
@@ -177,5 +219,95 @@ describe("searchSlackContext", () => {
     expect(context.status).toBe("mock");
     expect(context.reason).toBe("SENTINEL_FORCE_MOCKS=true");
     expect(context.evidence.length).toBeGreaterThan(0);
+    expect(context.provenance.fallback).toBe("mockContext.json");
+  });
+
+  it("paginates production Slack channel scans used for fallback enrichment", async () => {
+    const cursors: unknown[] = [];
+    const client = createClient(async (method, params) => {
+      if (method === "conversations.list") {
+        cursors.push(params.cursor);
+        if (!params.cursor) {
+          return {
+            channels: [
+              {
+                id: "CRANDOM",
+                name: "random"
+              }
+            ],
+            response_metadata: {
+              next_cursor: "page-2"
+            }
+          };
+        }
+
+        return {
+          channels: [
+            {
+              id: "CROUTES",
+              name: "routes"
+            }
+          ],
+          response_metadata: {
+            next_cursor: ""
+          }
+        };
+      }
+
+      if (method === "conversations.history") {
+        expect(params.channel).toBe("CROUTES");
+        return {
+          messages: [
+            {
+              text: "Zone B route update: Route R2 through Riverside Lane is blocked."
+            }
+          ]
+        };
+      }
+
+      throw new Error(`Unexpected method ${method}`);
+    });
+
+    const context = await searchSlackContext(client, undefined, "Zone B", false);
+
+    expect(cursors).toEqual([undefined, "page-2"]);
+    expect(context.status).toBe("mock");
+    expect(context.provenance.slackScan.matched).toBe(1);
+    expect(context.evidence.some((item) => item.source === "Live Slack channel scan")).toBe(true);
+  });
+
+  it("reports inaccessible demo channels during optional Slack enrichment", async () => {
+    const client = createClient(async (method) => {
+      if (method === "conversations.list") {
+        return {
+          channels: [
+            {
+              id: "CFIELD",
+              name: "field-reports"
+            },
+            {
+              id: "CROUTES",
+              name: "routes"
+            }
+          ]
+        };
+      }
+
+      if (method === "conversations.history") {
+        throw new Error("not_in_channel");
+      }
+
+      throw new Error(`Unexpected method ${method}`);
+    });
+
+    const context = await searchSlackContext(client, undefined, "Zone B", false);
+
+    expect(context.status).toBe("mock");
+    expect(context.provenance.slackScan).toMatchObject({
+      attempted: true,
+      matched: 0,
+      reason: "No enrichment results; 2 demo channel history requests failed"
+    });
+    expect(context.reason).toContain("2 demo channel history requests failed");
   });
 });

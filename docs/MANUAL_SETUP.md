@@ -71,7 +71,14 @@ After the app mention flow works:
 
 ## 6. Seed Demo Data
 
-Manually post the scripted fictional messages from `docs/DEMO_SCRIPT.md` into the demo channels.
+Prefer the seed script so every rehearsal uses the same fictional Slack story:
+
+```powershell
+npm.cmd run seed:slack
+npm.cmd run seed:slack -- --post
+```
+
+If you need to seed manually, paste the canonical fictional messages from `docs/DEMO_SEED_MESSAGES.md` into the matching demo channels.
 
 Use fictional names and fictional locations. Do not use real emergency reports or personal data.
 

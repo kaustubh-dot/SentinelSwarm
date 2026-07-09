@@ -100,9 +100,11 @@ Expected:
 
 Treat source labels as part of the product story:
 
-- `Evidence source: Slack Real-Time Search`: RTS worked.
-- `Evidence source: Live Slack channel context`: RTS was unavailable, but SentinelSwarm still used live Slack channel history.
-- `Evidence source: Demo fallback context`: live retrieval was unavailable or mock mode was forced.
+- `RTS N`: Real-Time Search returned usable Slack evidence.
+- `RTS tried | mock fallback`: SentinelSwarm attempted RTS and used deterministic `mockContext.json`.
+- `Slack scan +N`: optional live channel-history enrichment added evidence on top of the guaranteed mock fallback.
+- `mock weather` / `mock flood`: Open-Meteo was unavailable or mock mode was forced.
+- `live weather` / `live flood`: Open-Meteo returned live signals.
 
 If RTS falls back, do not panic. Say:
 
@@ -110,7 +112,7 @@ If RTS falls back, do not panic. Say:
 SentinelSwarm attempts Slack Real-Time Search first, then gracefully falls back while clearly labeling the evidence source.
 ```
 
-For a strong proof that the app is not hardcoded, use `SENTINEL_FORCE_MOCKS=false` and verify the card status shows Real-Time Search or live Slack channel context:
+For a strong proof that the app is not hardcoded, use `SENTINEL_FORCE_MOCKS=false` and verify the card status shows `RTS N` or `Slack scan +N`:
 
 1. Change the `#routes` message.
 2. Click `Refresh Analysis` in the existing Incident Control Room.

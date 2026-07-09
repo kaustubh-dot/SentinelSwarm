@@ -104,7 +104,7 @@ The bot should reply in thread with an Incident Control Room showing:
 - Supply action: send water cans, blankets, first-aid kits.
 - Confidence level.
 - Human approval disclaimer.
-- Buttons: Approve Plan, Post to Coordination, Generate Handover.
+- Initial buttons: Approve Plan, Refresh Analysis, Generate Handover. Post to Coordination appears only after approval.
 
 ## Video Timeline
 
@@ -160,6 +160,8 @@ Say:
 ```txt
 The app does not dispatch automatically. A human coordinator must approve the recommendation first.
 ```
+
+Show that `Post to Coordination` appears only after approval.
 
 Click Post to Coordination.
 

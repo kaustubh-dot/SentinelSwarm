@@ -7,11 +7,13 @@ import { getFloodRisk } from "../tools/flood";
 import { findZone, loadLocalData } from "../tools/localData";
 import { getWeatherRisk } from "../tools/weather";
 import { renderIncidentControlRoom } from "./blocks";
-import { createLocalPlanStore, type LocalPlanStore } from "./planStore";
+import { createLocalPlanStore, type ContextProvenance, type LocalPlanStore } from "./planStore";
 import { postPlanToCoordination } from "./postPlan";
 import { searchSlackContext } from "./rts";
 
 const planStore = createLocalPlanStore();
+const postingPlanIds = new Set<string>();
+const postedButUnsavedPlanIds = new Set<string>();
 
 type SlackClientLike = {
   apiCall?: (method: string, params: Record<string, unknown>) => Promise<unknown>;
@@ -37,9 +39,21 @@ type PostPlanDeps = ActionHandlerDeps & {
   config: Pick<AppConfig, "coordinationChannelId">;
 };
 
+type RefreshPlanArgs = {
+  client: SlackClientLike;
+  config: AppConfig;
+  stored: NonNullable<Awaited<ReturnType<LocalPlanStore["get"]>>>;
+  reportEvidence: Evidence;
+};
+
+type RefreshedPlanResult = {
+  plan: IncidentPlan;
+  contextProvenance?: ContextProvenance;
+};
+
 type RefreshPlanDeps = ActionHandlerDeps & {
   config: AppConfig;
-  refreshPlan?: typeof createRefreshedPlan;
+  refreshPlan?: (args: RefreshPlanArgs) => Promise<IncidentPlan | RefreshedPlanResult>;
 };
 
 const userLabel = (body: any): string => {
@@ -58,8 +72,13 @@ const actionThreadTs = (body: any, fallback?: string): string | undefined => {
   return fallback ?? body.message?.thread_ts ?? body.container?.thread_ts ?? actionMessageTs(body);
 };
 
-const createReportEvidence = (incident: ParsedIncidentReport, channelId: string): Evidence => ({
-  id: "field-report-current",
+const currentReportEvidenceId = (eventTs?: string): string => {
+  const suffix = eventTs?.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return suffix ? `field-report-current-${suffix}` : "field-report-current";
+};
+
+const createReportEvidence = (incident: ParsedIncidentReport, channelId: string, eventTs?: string): Evidence => ({
+  id: currentReportEvidenceId(eventTs),
   source: "Current Slack field report",
   channel: `<#${channelId}>`,
   text: incident.normalizedText,
@@ -72,11 +91,15 @@ const renderOptionsForStoredPlan = (stored: {
   approvedBy?: string;
   refreshCount?: number;
   lastRefreshedAt?: string;
+  lastChangeSummary?: string[];
+  contextProvenance?: ContextProvenance;
 }) => ({
   state: stored.state,
   approvedBy: stored.approvedBy,
   refreshCount: stored.refreshCount,
-  lastRefreshedAt: stored.lastRefreshedAt
+  lastRefreshedAt: stored.lastRefreshedAt,
+  changeSummary: stored.lastChangeSummary,
+  contextProvenance: stored.contextProvenance
 });
 
 const slackError = (error: unknown): string => {
@@ -95,12 +118,7 @@ const createRefreshedPlan = async ({
   config,
   stored,
   reportEvidence
-}: {
-  client: SlackClientLike;
-  config: AppConfig;
-  stored: NonNullable<Awaited<ReturnType<LocalPlanStore["get"]>>>;
-  reportEvidence: Evidence;
-}): Promise<IncidentPlan> => {
+}: RefreshPlanArgs): Promise<RefreshedPlanResult> => {
   const incident = parseIncidentReport(reportEvidence.text);
   const localData = loadLocalData();
   const zone = findZone(localData.zones, incident.zoneInput || stored.plan.zoneName);
@@ -121,9 +139,82 @@ const createRefreshedPlan = async ({
   );
 
   return {
-    ...planner.plan,
-    planId: stored.plan.planId
+    plan: {
+      ...planner.plan,
+      planId: stored.plan.planId
+    },
+    contextProvenance: context.provenance
   };
+};
+
+const asRefreshedPlanResult = (result: IncidentPlan | RefreshedPlanResult, fallbackProvenance?: ContextProvenance): RefreshedPlanResult => {
+  return "plan" in result
+    ? result
+    : {
+        plan: result,
+        contextProvenance: fallbackProvenance
+      };
+};
+
+const summarizeRefreshChanges = (before: IncidentPlan, after: IncidentPlan): string[] => {
+  const changes: string[] = [];
+
+  if (before.severity !== after.severity) {
+    changes.push(`Severity changed from ${before.severity.toUpperCase()} to ${after.severity.toUpperCase()}.`);
+  }
+
+  const beforeRoutes = new Map(before.routeActions.map((route) => [route.routeId, route]));
+  for (const route of after.routeActions) {
+    const previous = beforeRoutes.get(route.routeId);
+    if (!previous) {
+      changes.push(`Route added: ${route.routeName} is ${route.status.toUpperCase()}.`);
+      continue;
+    }
+    if (previous.status !== route.status) {
+      changes.push(`${route.routeName} changed from ${previous.status.toUpperCase()} to ${route.status.toUpperCase()}.`);
+    } else if (previous.recommendation !== route.recommendation) {
+      changes.push(`${route.routeName} guidance was updated.`);
+    }
+  }
+
+  const beforeIncidents = new Set(before.incidents.map((incident) => incident.id));
+  const beforeIncidentById = new Map(before.incidents.map((incident) => [incident.id, incident]));
+  const addedIncidents = after.incidents.filter((incident) => !beforeIncidents.has(incident.id));
+  if (addedIncidents.length > 0) {
+    changes.push(`New priority incident: ${addedIncidents[0].title}.`);
+  }
+  for (const incident of after.incidents) {
+    const previous = beforeIncidentById.get(incident.id);
+    if (!previous) {
+      continue;
+    }
+    const evidenceChanged = previous.evidenceIds.join(",") !== incident.evidenceIds.join(",");
+    if (previous.recommendedOwner !== incident.recommendedOwner) {
+      changes.push(`${incident.title} owner changed from ${previous.recommendedOwner} to ${incident.recommendedOwner}.`);
+    } else if (previous.summary !== incident.summary || evidenceChanged) {
+      changes.push(`${incident.title} evidence or guidance was updated.`);
+    }
+  }
+
+  const beforeResources = new Set(before.resourceMatches.map((match) => `${match.type}:${match.name}`));
+  const beforeResourceById = new Map(before.resourceMatches.map((match) => [`${match.type}:${match.name}`, match]));
+  const addedResource = after.resourceMatches.find((match) => !beforeResources.has(`${match.type}:${match.name}`));
+  if (addedResource) {
+    changes.push(`New resource match: ${addedResource.type} ${addedResource.name}.`);
+  }
+  for (const match of after.resourceMatches) {
+    const previous = beforeResourceById.get(`${match.type}:${match.name}`);
+    if (previous && previous.recommendation !== match.recommendation) {
+      changes.push(`${match.type} ${match.name} recommendation was updated.`);
+      break;
+    }
+  }
+
+  if (Math.abs(before.confidence - after.confidence) >= 0.05) {
+    changes.push(`Confidence changed from ${Math.round(before.confidence * 100)}% to ${Math.round(after.confidence * 100)}%.`);
+  }
+
+  return changes.length > 0 ? changes.slice(0, 4) : ["No material route, incident, or resource changes detected."];
 };
 
 export const handleApprovePlanAction = async ({ body, client, logger, planStore }: ActionHandlerDeps): Promise<void> => {
@@ -143,6 +234,15 @@ export const handleApprovePlanAction = async ({ body, client, logger, planStore 
   const updateChannel = actionChannelId(body, stored.sourceChannel);
   const updateTs = actionMessageTs(body, stored.messageTs);
 
+  if (stored.state === "posted" || postedButUnsavedPlanIds.has(planId)) {
+    await client.chat.postEphemeral({
+      channel: updateChannel,
+      user: body.user.id,
+      text: "This plan has already been posted to coordination."
+    });
+    return;
+  }
+
   stored.state = "approved";
   stored.approvedBy = userLabel(body);
   await planStore.set(planId, stored);
@@ -156,11 +256,31 @@ export const handleApprovePlanAction = async ({ body, client, logger, planStore 
     });
   } catch (error) {
     logger?.error(error);
-    await client.chat.postEphemeral({
-      channel: updateChannel,
-      user: body.user.id,
-      text: `Plan approved, but I could not update the control room card (${slackError(error)}). You can still click Post to Coordination.`
-    });
+    try {
+      const replacement = await client.chat.postMessage({
+        channel: updateChannel,
+        thread_ts: actionThreadTs(body, stored.threadTs),
+        text: `${stored.plan.zoneName} plan approved.`,
+        blocks: renderIncidentControlRoom(stored.plan, renderOptionsForStoredPlan(stored))
+      });
+      const replacementTs = (replacement as any).ts;
+      if (typeof replacementTs === "string" && replacementTs) {
+        stored.messageTs = replacementTs;
+        await planStore.set(planId, stored);
+      }
+      await client.chat.postEphemeral({
+        channel: updateChannel,
+        user: body.user.id,
+        text: "Plan approved. I could not update the original card, so I posted a replacement control room card."
+      });
+    } catch (replacementError) {
+      logger?.error(replacementError);
+      await client.chat.postEphemeral({
+        channel: updateChannel,
+        user: body.user.id,
+        text: `Plan approved, but I could not refresh or replace the control room card (${slackError(error)}). Rerun the analysis before posting to coordination.`
+      });
+    }
   }
 };
 
@@ -174,6 +294,26 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
       channel,
       user: body.user.id,
       text: "I could not find that plan. Please rerun the analysis."
+    });
+    return;
+  }
+
+  if (stored.state === "posted" || postedButUnsavedPlanIds.has(planId)) {
+    await client.chat.postEphemeral({
+      channel,
+      user: body.user.id,
+      text: postedButUnsavedPlanIds.has(planId)
+        ? "This plan has already been posted to coordination, but local posted-state save failed. Avoid duplicate posting and rerun the analysis if you need a fresh card."
+        : "This plan has already been posted to coordination."
+    });
+    return;
+  }
+
+  if (postingPlanIds.has(planId)) {
+    await client.chat.postEphemeral({
+      channel,
+      user: body.user.id,
+      text: "This plan is already being posted to coordination. Please wait for the card to update."
     });
     return;
   }
@@ -196,20 +336,31 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
     return;
   }
 
+  postingPlanIds.add(planId);
+  let postedToCoordination = false;
   try {
     await postPlanToCoordination(client as any, config.coordinationChannelId, stored.plan, stored.approvedBy ?? userLabel(body));
+    postedToCoordination = true;
+    stored.state = "posted";
+    await planStore.set(planId, stored);
+    postedButUnsavedPlanIds.delete(planId);
   } catch (error) {
+    if (postedToCoordination) {
+      postedButUnsavedPlanIds.add(planId);
+    }
     logger?.error(error);
     await client.chat.postEphemeral({
       channel,
       user: body.user.id,
-      text: `Could not post to coordination (${slackError(error)}). The plan is still approved. Check SLACK_COORDINATION_CHANNEL_ID, chat:write, and bot membership in #coordination.`
+      text: postedToCoordination
+        ? `The plan was posted to coordination, but I could not save the posted state (${slackError(error)}). Avoid clicking Post again and check local app logs.`
+        : `Could not post to coordination (${slackError(error)}). The plan is still approved. Check SLACK_COORDINATION_CHANNEL_ID, chat:write, and bot membership in #coordination.`
     });
     return;
+  } finally {
+    postingPlanIds.delete(planId);
   }
 
-  stored.state = "posted";
-  await planStore.set(planId, stored);
   const updateChannel = actionChannelId(body, stored.sourceChannel);
   const updateTs = actionMessageTs(body, stored.messageTs);
 
@@ -253,7 +404,7 @@ export const handleRefreshPlanAction = async ({ body, client, logger, planStore,
     return;
   }
 
-  const reportEvidence = stored.reportEvidence ?? stored.plan.evidence.find((item) => item.id === "field-report-current");
+  const reportEvidence = stored.reportEvidence ?? stored.plan.evidence.find((item) => item.id === "field-report-current" || item.id.startsWith("field-report-current-"));
   if (!reportEvidence) {
     await client.chat.postEphemeral({
       channel,
@@ -267,20 +418,27 @@ export const handleRefreshPlanAction = async ({ body, client, logger, planStore,
   const updateTs = actionMessageTs(body, stored.messageTs);
 
   try {
-    const refreshedPlan = await refreshPlan({
-      client,
-      config,
-      stored,
-      reportEvidence
-    });
+    const refreshResult = asRefreshedPlanResult(
+      await refreshPlan({
+        client,
+        config,
+        stored,
+        reportEvidence
+      }),
+      stored.contextProvenance
+    );
+    const refreshedPlan = refreshResult.plan;
+    const changeSummary = summarizeRefreshChanges(stored.plan, refreshedPlan);
     const refreshed = {
       ...stored,
       plan: refreshedPlan,
       reportEvidence,
+      contextProvenance: refreshResult.contextProvenance,
       state: "draft" as const,
       approvedBy: undefined,
       refreshCount: (stored.refreshCount ?? 0) + 1,
-      lastRefreshedAt: new Date().toISOString()
+      lastRefreshedAt: new Date().toISOString(),
+      lastChangeSummary: changeSummary
     };
 
     await planStore.set(planId, refreshed);
@@ -351,7 +509,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
       const context = await searchSlackContext(client, eventAny.action_token, zone.name, config.forceMocks);
       const weather = await getWeatherRisk(zone, config.forceMocks);
       const flood = await getFloodRisk(zone, config.forceMocks);
-      const reportEvidence = createReportEvidence(incident, eventAny.channel);
+      const reportEvidence = createReportEvidence(incident, eventAny.channel, eventAny.ts);
 
       const planner = await createIncidentPlan(
         {
@@ -376,6 +534,7 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
       await planStore.set(plan.planId, {
         plan,
         reportEvidence,
+        contextProvenance: context.provenance,
         state: "draft",
         refreshCount: 0,
         messageTs: (response as any).ts,

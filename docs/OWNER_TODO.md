@@ -41,7 +41,7 @@ Use this as the live owner checklist. It intentionally includes work that is not
 - [ ] Route guidance identifies blocked/caution/open routes.
 - [ ] Volunteer, shelter, and supply matches are present.
 - [ ] Approve Plan updates the card state.
-- [ ] Post to Coordination refuses to post before approval.
+- [ ] Post to Coordination is hidden before approval, and stale/direct clicks before approval are refused.
 - [ ] Post to Coordination succeeds after approval.
 - [ ] Missing or wrong coordination channel produces a readable setup hint.
 - [ ] Generate Handover posts a concise thread reply.

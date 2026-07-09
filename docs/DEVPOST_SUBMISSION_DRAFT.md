@@ -55,7 +55,7 @@ During floods and landslides, response teams often already have the facts they n
 
 The demo works even if services fail:
 
-- RTS failure falls back to live Slack channel scan, then `mockContext.json`.
+- RTS failure falls back to `mockContext.json`, then optionally enriches with live Slack channel scan when available.
 - Weather failure falls back to `mockWeather.json`.
 - Flood failure falls back to `mockFlood.json`.
 - LLM failure or invalid JSON falls back to deterministic planning.

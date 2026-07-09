@@ -8,9 +8,9 @@ flowchart LR
   Mention --> Bolt["Slack Bolt app<br/>Socket Mode"]
   Bolt --> RTS["assistant.search.context<br/>Real-Time Search"]
   RTS --> Evidence["Evidence Ledger<br/>Slack snippets + links"]
-  RTS -. failure .-> SlackScan["Live Slack channel scan"]
+  RTS -. failure .-> MockContext["mockContext.json"]
+  MockContext -. optional enrichment .-> SlackScan["Live Slack channel scan"]
   SlackScan --> Evidence
-  SlackScan -. failure .-> MockContext["mockContext.json"]
   Bolt --> RiskTools["Weather + flood adapters"]
   RiskTools --> Weather["Open-Meteo weather"]
   RiskTools --> Flood["Open-Meteo flood signal"]
@@ -25,7 +25,8 @@ flowchart LR
   Planner --> Zod["Zod validation"]
   Zod --> BlockKit["Block Kit Incident Control Room"]
   BlockKit --> Refresh["Refresh Analysis<br/>latest Slack context"]
-  Refresh --> SlackScan
+  Refresh --> MockContext
+  MockContext -. optional enrichment .-> SlackScan
   BlockKit --> Approval["Approve Plan button"]
   Approval --> Coordination["Post to #coordination"]
   BlockKit --> Handover["Generate Handover"]
@@ -33,7 +34,7 @@ flowchart LR
 
 ## Fallback Contract
 
-- RTS failure: use live Slack channel scan, then `src/data/mockContext.json`.
+- RTS failure: use `src/data/mockContext.json` as the guaranteed fallback, then enrich with live Slack channel scan when available.
 - Weather failure: use `src/data/mockWeather.json`.
 - Flood failure: use `src/data/mockFlood.json`.
 - LLM failure or invalid JSON: use deterministic planner after one repair attempt.

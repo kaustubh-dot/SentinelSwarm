@@ -119,6 +119,7 @@ Never commit real `.env` values.
 
 Run these before recording and before submission:
 
+- Record latest evidence in `docs/DEMO_PROOF.md`.
 - `npm run build`
 - `npm test`
 - `npm run check:secrets`

@@ -31,6 +31,7 @@ Rules:
 - This is decision support, not emergency authority.
 - Do not invent evidence, channels, Slack links, volunteers, shelters, supplies, or routes.
 - Keep the same operational facts, but improve clarity, prioritization, and human-action wording.
+- Confidence and severity are measured by the deterministic planner; echo them but do not inflate them.
 - Keep recommendations concise enough for Slack Block Kit.
 - Use the provided evidence IDs when referencing incidents.
 

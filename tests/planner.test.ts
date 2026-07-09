@@ -94,14 +94,24 @@ describe("refinePlanWithLlm", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ output_text: "not json" }), {
-          status: 200
-        })
+        new Response(
+          JSON.stringify({
+            candidates: [{ content: { parts: [{ text: "not json" }] } }]
+          }),
+          {
+            status: 200
+          }
+        )
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ output_text: JSON.stringify(patch) }), {
-          status: 200
-        })
+        new Response(
+          JSON.stringify({
+            candidates: [{ content: { parts: [{ text: JSON.stringify(patch) }] } }]
+          }),
+          {
+            status: 200
+          }
+        )
       );
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -117,23 +127,36 @@ describe("refinePlanWithLlm", () => {
     expect(result.usedLlm).toBe(true);
     expect(result.plan.statuses.planner).toBe("llm");
     expect(result.plan.summary).toContain("LLM refined");
+    expect(result.plan.confidence).toBe(deterministicPlan.confidence);
     expect(result.plan.evidence).toEqual(deterministicPlan.evidence);
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     const [url, request] = fetchSpy.mock.calls[0] as [string, RequestInit];
     const headers = request.headers as Record<string, string>;
-    const body = JSON.parse(String(request.body)) as { model: string };
-    expect(url).toBe("https://generativelanguage.googleapis.com/v1beta/interactions");
+    const body = JSON.parse(String(request.body)) as {
+      contents: Array<{ role: string; parts: Array<{ text: string }> }>;
+      generationConfig: { responseMimeType: string; temperature: number };
+      systemInstruction: { parts: Array<{ text: string }> };
+    };
+    expect(url).toBe("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent");
     expect(headers["x-goog-api-key"]).toBe("test-key");
-    expect(body.model).toBe("gemini-3.5-flash");
+    expect(body.contents[0]?.role).toBe("user");
+    expect(body.contents[0]?.parts[0]?.text).toContain("Zone B");
+    expect(body.generationConfig.responseMimeType).toBe("application/json");
+    expect(body.systemInstruction.parts[0]?.text).toContain("Return strict JSON only");
   });
 
   it("falls back when both LLM attempts fail validation", async () => {
     const input = makeInput();
     const deterministicPlan = createFallbackPlan(input);
     const fetchSpy = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ output_text: JSON.stringify({ summary: "missing required fields" }) }), {
-        status: 200
-      })
+      new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({ summary: "missing required fields" }) }] } }]
+        }),
+        {
+          status: 200
+        }
+      )
     );
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -149,6 +172,104 @@ describe("refinePlanWithLlm", () => {
     expect(result.usedLlm).toBe(false);
     expect(result.plan).toEqual(deterministicPlan);
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back when LLM output references unsupported evidence", async () => {
+    const input = makeInput();
+    const deterministicPlan = createFallbackPlan(input);
+    const firstIncident = deterministicPlan.incidents[0]!;
+    const unsupportedPatch = {
+      summary: "LLM refined with unsupported evidence.",
+      confidence: 0.99,
+      severity: deterministicPlan.severity,
+      incidents: [
+        {
+          ...firstIncident,
+          evidenceIds: ["invented-evidence-id"]
+        }
+      ],
+      routeActions: deterministicPlan.routeActions,
+      resourceMatches: deterministicPlan.resourceMatches,
+      recommendedActions: deterministicPlan.recommendedActions,
+      handover: "LLM handover with unsupported evidence."
+    };
+    const fetchSpy = vi.fn().mockImplementation(async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: JSON.stringify(unsupportedPatch) }] } }]
+        }),
+        {
+          status: 200
+        }
+      )
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await refinePlanWithLlm(
+      makeConfig({
+        useLlm: true,
+        googleApiKey: "test-key"
+      }),
+      input,
+      deterministicPlan
+    );
+
+    expect(result.usedLlm).toBe(false);
+    expect(result.reason).toContain("unknown evidence");
+    expect(result.plan).toEqual(deterministicPlan);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back when LLM output invents resources or route facts", async () => {
+    const input = makeInput();
+    const deterministicPlan = createFallbackPlan(input);
+    const firstRoute = deterministicPlan.routeActions[0]!;
+    const unsupportedPatch = {
+      summary: "LLM refined with unsupported resource facts.",
+      confidence: 0.8,
+      severity: deterministicPlan.severity,
+      incidents: deterministicPlan.incidents,
+      routeActions: [
+        {
+          ...firstRoute,
+          status: firstRoute.status === "blocked" ? "open" : "blocked"
+        }
+      ],
+      resourceMatches: [
+        ...deterministicPlan.resourceMatches,
+        {
+          type: "volunteer" as const,
+          name: "Invented Helper",
+          recommendation: "Dispatch an unsupported volunteer."
+        }
+      ],
+      recommendedActions: deterministicPlan.recommendedActions,
+      handover: "LLM handover with unsupported resource facts."
+    };
+    const fetchSpy = vi.fn().mockImplementation(async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [{ content: { parts: [{ text: JSON.stringify(unsupportedPatch) }] } }]
+        }),
+        {
+          status: 200
+        }
+      )
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await refinePlanWithLlm(
+      makeConfig({
+        useLlm: true,
+        googleApiKey: "test-key"
+      }),
+      input,
+      deterministicPlan
+    );
+
+    expect(result.usedLlm).toBe(false);
+    expect(result.reason).toMatch(/route facts|unknown resource/);
+    expect(result.plan).toEqual(deterministicPlan);
   });
 
   it("redacts Slack ids, links, and permalinks from the optional LLM prompt", () => {

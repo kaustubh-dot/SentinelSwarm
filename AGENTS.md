@@ -100,6 +100,7 @@ Use buttons:
 
 - `approve_plan`.
 - `post_plan`.
+- `refresh_plan`.
 - `generate_handover`.
 
 Keep Slack messages concise, readable, and demo-friendly.
@@ -170,10 +171,10 @@ docs/
   REQUIREMENTS_TRACEABILITY.md
   TECH_RISK_REGISTER.md
   ARCHITECTURE.md
-  IMPLEMENTATION_TASKS.md
   SUBMISSION_CHECKLIST.md
   DEMO_SCRIPT.md
   DEMO_SEED_MESSAGES.md
+  DEMO_PROOF.md
   DEMO_VIDEO_STORYBOARD.md
   DEVPOST_SUBMISSION_DRAFT.md
   JUDGE_QA.md

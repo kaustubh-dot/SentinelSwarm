@@ -9,7 +9,7 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 -> Incident Control Room appears
 -> Evidence Ledger shows why the plan was created
 -> Refresh Analysis can rerun after a new route update
--> Approve Plan
+-> Approve Plan, which reveals Post to Coordination
 -> Post to Coordination
 -> #coordination receives the final action plan
 ```
@@ -28,7 +28,7 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 
 The app is designed to work even if external services fail:
 
-- Real-Time Search failure -> live Slack channel scan when available -> local `mockContext.json`
+- Real-Time Search failure -> local `mockContext.json`, with live Slack channel scan used only as optional enrichment when available
 - Weather API failure -> local `mockWeather.json`
 - Flood API failure -> local `mockFlood.json`
 - Gemini refinement is optional and off by default. If the API key is missing, Gemini fails, or the model returns invalid JSON after one schema-repair retry, SentinelSwarm uses the deterministic fallback planner.
@@ -62,7 +62,7 @@ See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/M
 - [Judge Q&A](docs/JUDGE_QA.md)
 - [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
 
-Operator/internal planning docs such as `OWNER_TODO.md`, `OWNER_LIVE_RUNBOOK.md`, `NEXT_TASKS.md`, `ROADMAP.md`, and `IMPLEMENTATION_TASKS.md` are kept in `docs/` so the remaining live-demo work stays visible.
+Operator proof and live-run docs such as `DEMO_PROOF.md`, `OWNER_TODO.md`, and `OWNER_LIVE_RUNBOOK.md` are kept in `docs/` so the remaining live-demo work stays visible without duplicating old status ledgers.
 
 ## Seed The Demo Workspace
 

@@ -6,19 +6,67 @@ export type ContextResult = {
   status: "rts" | "slack" | "mock";
   evidence: Evidence[];
   reason?: string;
+  provenance: {
+    rts: {
+      attempted: boolean;
+      matched: number;
+      reason?: string;
+    };
+    fallback: "mockContext.json" | "none";
+    slackScan: {
+      attempted: boolean;
+      matched: number;
+      reason?: string;
+    };
+  };
 };
 
 const DEMO_CHANNEL_NAMES = new Set(["field-reports", "alerts", "routes", "shelters", "supplies", "volunteers", "coordination"]);
 
 const CRISIS_TERMS = ["flood", "rain", "water", "route", "shelter", "volunteer", "suppl", "evacuat", "blocked", "rescue", "overflow"];
 
-const fallbackContext = (zoneName: string, reason: string): ContextResult => {
+const redactActionToken = (message: string, actionToken?: string): string => {
+  if (!actionToken) {
+    return message;
+  }
+
+  return message.split(actionToken).join("[redacted-action-token]");
+};
+
+const errorMessage = (error: unknown, fallback: string, actionToken?: string): string => {
+  const message = error instanceof Error ? error.message : fallback;
+  return redactActionToken(message, actionToken);
+};
+
+const fallbackEvidence = (zoneName: string): Evidence[] => {
   const lowerZone = zoneName.toLowerCase();
-  const evidence = loadMockContext().filter((item) => item.text.toLowerCase().includes(lowerZone));
+  const mockContext = loadMockContext();
+  const evidence = mockContext.filter((item) => item.text.toLowerCase().includes(lowerZone));
+  return evidence.length > 0 ? evidence : mockContext;
+};
+
+const fallbackContext = (
+  zoneName: string,
+  reason: string,
+  rts: ContextResult["provenance"]["rts"] = {
+    attempted: false,
+    matched: 0
+  },
+  slackScan: ContextResult["provenance"]["slackScan"] = {
+    attempted: false,
+    matched: 0
+  },
+  evidence = fallbackEvidence(zoneName)
+): ContextResult => {
   return {
     status: "mock",
     evidence,
-    reason
+    reason,
+    provenance: {
+      rts,
+      fallback: "mockContext.json",
+      slackScan
+    }
   };
 };
 
@@ -129,19 +177,35 @@ const searchRealtimeContext = async (client: WebClient, actionToken: string, zon
     .slice(0, 4);
 };
 
-const scanDemoChannels = async (client: WebClient, zoneName: string): Promise<Evidence[]> => {
-  const listResponse = await client.apiCall("conversations.list", {
-    types: "public_channel",
-    exclude_archived: true,
-    limit: 1000
-  });
+const scanDemoChannels = async (
+  client: WebClient,
+  zoneName: string
+): Promise<{
+  evidence: Evidence[];
+  channelFailures: number;
+}> => {
+  const channels: any[] = [];
+  let cursor: string | undefined;
 
-  const channels = (listResponse as any).channels ?? [];
-  if (!Array.isArray(channels)) {
-    return [];
-  }
+  do {
+    const listResponse = await client.apiCall("conversations.list", {
+      types: "public_channel",
+      exclude_archived: true,
+      limit: 200,
+      ...(cursor ? { cursor } : {})
+    });
+
+    const pageChannels = (listResponse as any).channels ?? [];
+    if (Array.isArray(pageChannels)) {
+      channels.push(...pageChannels);
+    }
+
+    const nextCursor = (listResponse as any).response_metadata?.next_cursor;
+    cursor = typeof nextCursor === "string" && nextCursor.trim() ? nextCursor : undefined;
+  } while (cursor);
 
   const evidence: Evidence[] = [];
+  let channelFailures = 0;
   for (const channel of channels) {
     const channelId = String(channel.id ?? "");
     const channelName = String(channel.name ?? "");
@@ -177,11 +241,67 @@ const scanDemoChannels = async (client: WebClient, zoneName: string): Promise<Ev
         );
       }
     } catch {
+      channelFailures += 1;
       // Some channels may require bot membership. Keep scanning the rest.
     }
   }
 
-  return evidence.slice(0, 6);
+  return {
+    evidence: evidence.slice(0, 6),
+    channelFailures
+  };
+};
+
+const appendLiveScanEvidence = async (
+  client: WebClient,
+  zoneName: string,
+  baseEvidence: Evidence[],
+  reasons: string[]
+): Promise<{
+  evidence: Evidence[];
+  slackScan: ContextResult["provenance"]["slackScan"];
+}> => {
+  try {
+    const scan = await scanDemoChannels(client, zoneName);
+    const liveEvidence = scan.evidence;
+    const failureNote =
+      scan.channelFailures > 0
+        ? `${scan.channelFailures} demo channel history request${scan.channelFailures === 1 ? "" : "s"} failed`
+        : undefined;
+    if (liveEvidence.length === 0) {
+      const reason = failureNote ? `No enrichment results; ${failureNote}` : "No enrichment results";
+      reasons.push(`Optional Slack channel scan returned ${reason.toLowerCase()}`);
+      return {
+        evidence: baseEvidence,
+        slackScan: {
+          attempted: true,
+          matched: 0,
+          reason
+        }
+      };
+    }
+
+    reasons.push(`Optional Slack channel scan added ${liveEvidence.length} enrichment result(s)${failureNote ? `; ${failureNote}` : ""}`);
+    return {
+      evidence: [...liveEvidence.slice(0, 2), ...baseEvidence, ...liveEvidence.slice(2)],
+      slackScan: {
+        attempted: true,
+        matched: liveEvidence.length,
+        reason: failureNote
+      }
+    };
+  } catch (error) {
+    const reason = errorMessage(error, "Slack channel scan failed");
+    reasons.push(`Optional Slack channel scan failed: ${reason}`);
+    return {
+      evidence: baseEvidence,
+      slackScan: {
+        attempted: true,
+        matched: 0,
+        reason
+      }
+    };
+  }
 };
 
 export const searchSlackContext = async (
@@ -195,37 +315,44 @@ export const searchSlackContext = async (
   }
 
   const fallbackReasons: string[] = [];
+  const rtsProvenance: ContextResult["provenance"]["rts"] = {
+    attempted: Boolean(actionToken),
+    matched: 0
+  };
 
   if (actionToken) {
     try {
       const evidence = await searchRealtimeContext(client, actionToken, zoneName);
+      rtsProvenance.matched = evidence.length;
       if (evidence.length > 0) {
         return {
           status: "rts",
-          evidence
+          evidence,
+          provenance: {
+            rts: rtsProvenance,
+            fallback: "none",
+            slackScan: {
+              attempted: false,
+              matched: 0
+            }
+          }
         };
       }
-      fallbackReasons.push("RTS returned no usable message results");
+      rtsProvenance.reason = "RTS returned no usable message results";
+      fallbackReasons.push(rtsProvenance.reason);
     } catch (error) {
-      fallbackReasons.push(error instanceof Error ? `RTS failed: ${error.message}` : "RTS failed");
+      const reason = errorMessage(error, "RTS failed", actionToken);
+      rtsProvenance.reason = reason;
+      fallbackReasons.push(`RTS failed: ${reason}`);
     }
   } else {
-    fallbackReasons.push("No action_token in app_mention event");
+    rtsProvenance.reason = "No action_token in app_mention event";
+    fallbackReasons.push(rtsProvenance.reason);
   }
 
-  try {
-    const evidence = await scanDemoChannels(client, zoneName);
-    if (evidence.length > 0) {
-      return {
-        status: "slack",
-        evidence,
-        reason: fallbackReasons.join("; ")
-      };
-    }
-    fallbackReasons.push("Slack channel scan returned no usable results");
-  } catch (error) {
-    fallbackReasons.push(error instanceof Error ? `Slack channel scan failed: ${error.message}` : "Slack channel scan failed");
-  }
+  fallbackReasons.push("Using deterministic mockContext.json fallback");
+  const mockEvidence = fallbackEvidence(zoneName);
+  const enrichment = await appendLiveScanEvidence(client, zoneName, mockEvidence, fallbackReasons);
 
-  return fallbackContext(zoneName, fallbackReasons.join("; "));
+  return fallbackContext(zoneName, fallbackReasons.join("; "), rtsProvenance, enrichment.slackScan, enrichment.evidence);
 };

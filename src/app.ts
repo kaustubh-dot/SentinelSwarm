@@ -1,5 +1,6 @@
 import { App, LogLevel } from "@slack/bolt";
 import { loadConfig } from "./config";
+import { shouldStartHealthServer, startHealthServer } from "./health";
 import { registerHandlers } from "./slack/handlers";
 
 const toSlackLogLevel = (level: string): LogLevel => {
@@ -25,6 +26,10 @@ const main = async (): Promise<void> => {
   });
 
   registerHandlers(app, config);
+
+  if (shouldStartHealthServer()) {
+    startHealthServer(config);
+  }
 
   await app.start();
   console.log("SentinelSwarm is running in Socket Mode.");

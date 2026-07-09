@@ -34,6 +34,8 @@ Before opening Slack, confirm:
 - Interactivity is enabled.
 - Bot is invited to `#field-reports`, `#routes`, `#shelters`, `#supplies`, `#volunteers`, `#alerts`, and `#coordination`.
 - `SLACK_COORDINATION_CHANNEL_ID` is a channel ID like `C...`, not `#coordination`.
+- `SENTINEL_FORCE_MOCKS=false` for the live recording. Use `true` only for fallback rehearsal.
+- `SENTINEL_USE_LLM=false` for the primary recording.
 
 Start the app:
 

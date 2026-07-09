@@ -29,6 +29,7 @@ Use this as the live owner checklist. It intentionally includes work that is not
 - [ ] `.env` has `SLACK_BOT_TOKEN`.
 - [ ] `.env` has `SLACK_APP_TOKEN`.
 - [ ] `.env` has `SLACK_COORDINATION_CHANNEL_ID`.
+- [ ] `.env` sets `SENTINEL_FORCE_MOCKS=false` for the live recording.
 - [ ] `.env` keeps `SENTINEL_USE_LLM=false` for the primary recording.
 
 ## Live Demo Validation

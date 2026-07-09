@@ -31,6 +31,8 @@ Do not add `GOOGLE_API_KEY` for the judged demo.
 4. Wait for the Space build to finish.
 5. Open the Space URL and confirm the health JSON is available.
 
+Current environment note: Codex can inspect Hugging Face as `CooLBoT22`, but the available HF MCP tools do not expose direct Space creation, file upload, or secret-setting actions. A one-shot HF Jobs deploy helper was attempted and blocked by insufficient prepaid credits. Use the Hugging Face web UI, a locally authenticated `hf` CLI, or a token-backed git push for the actual Space creation/upload.
+
 Expected health fields:
 
 ```json

@@ -4,25 +4,25 @@ Use this page as the factual evidence log for the final live Slack smoke test. D
 
 ## Latest Live Slack Smoke Test
 
-- Date:
-- Time:
-- Time zone:
-- Tester:
-- Result: Not yet verified.
+- Date: 2026-07-09
+- Time: 15:37
+- Time zone: IST (UTC+05:30)
+- Tester: Codex CLI smoke test with live Slack credentials
+- Result: Slack smoke preflight passed. Full hosted Incident Control Room approval/post run is not yet verified.
 
 ## Workspace / Sandbox
 
-- Slack workspace name:
+- Slack workspace name: SentinelSwarm
 - Slack sandbox URL:
 - Slack app name: SentinelSwarm
 - Demo channels verified:
-  - `#field-reports`:
-  - `#volunteers`:
-  - `#supplies`:
-  - `#routes`:
-  - `#shelters`:
-  - `#alerts`:
-  - `#coordination`:
+  - `#field-reports`: bot member and history readable (`C0BFGD0MPDM`)
+  - `#volunteers`: bot member and history readable (`C0BFZMNTS6M`)
+  - `#supplies`: bot member and history readable (`C0BFRGTSSMR`)
+  - `#routes`: bot member and history readable (`C0BGS4H4J5N`)
+  - `#shelters`: bot member and history readable (`C0BFUFE8UG5`)
+  - `#alerts`: bot member and history readable (`C0BFVPYD0UE`)
+  - `#coordination`: bot member and history readable (`C0BG1G78DFE`)
 
 ## Command Tested
 
@@ -43,6 +43,8 @@ Use this page as the factual evidence log for the final live Slack smoke test. D
 | Weather | Not yet verified | Not yet verified | Fallback should use `src/data/mockWeather.json`. |
 | Flood | Not yet verified | Not yet verified | Fallback should use `src/data/mockFlood.json`. |
 | Planner | Not yet verified | Not yet verified | Invalid or unavailable LLM output should fall back to deterministic planner. |
+
+Smoke note: `npm.cmd run smoke:slack` passed on 2026-07-09 at 15:37 IST. It verified Slack tokens, Socket Mode app token, public demo channel access, and `#coordination` target membership. It did not exercise the Incident Control Room buttons.
 
 ## Incident Control Room Checks
 
@@ -88,7 +90,7 @@ Use this page as the factual evidence log for the final live Slack smoke test. D
 
 ## Known Issues Before Submission
 
-- Open issue 1:
+- Open issue 1: Hugging Face Space repo `CooLBoT22/sentinelswarm-slack-bot` is not created yet. The HF Jobs deploy helper was blocked by insufficient prepaid credits, so Space creation/upload must use HF web UI, local HF CLI after login, or a direct token-backed git push.
 - Open issue 2:
 - Open issue 3:
 

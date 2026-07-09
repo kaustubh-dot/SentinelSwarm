@@ -8,27 +8,27 @@ Use this as the live owner checklist. It intentionally includes work that is not
 - [x] `npm.cmd test` passes.
 - [x] `npm.cmd run build` passes.
 - [x] `npm.cmd run check:secrets` passes.
-- [ ] `npm.cmd run smoke:slack` passes with live Slack credentials.
+- [x] `npm.cmd run smoke:slack` passes with live Slack credentials.
 - [ ] Optional write smoke test posts a harmless message to `#coordination`.
 - [ ] `npm.cmd run seed:slack` previews the seed plan.
 - [ ] `npm.cmd run seed:slack -- --post` posts fictional demo messages when ready.
 
 ## Slack Setup
 
-- [ ] Slack app is installed in the sandbox workspace.
-- [ ] Socket Mode is enabled.
+- [x] Slack app is installed in the sandbox workspace.
+- [x] Socket Mode is enabled.
 - [ ] Interactivity is enabled.
 - [ ] `app_mention` event subscription is installed.
-- [ ] Bot is invited to `#field-reports`.
-- [ ] Bot is invited to `#alerts`.
-- [ ] Bot is invited to `#routes`.
-- [ ] Bot is invited to `#shelters`.
-- [ ] Bot is invited to `#supplies`.
-- [ ] Bot is invited to `#volunteers`.
-- [ ] Bot is invited to `#coordination`.
-- [ ] `.env` has `SLACK_BOT_TOKEN`.
-- [ ] `.env` has `SLACK_APP_TOKEN`.
-- [ ] `.env` has `SLACK_COORDINATION_CHANNEL_ID`.
+- [x] Bot is invited to `#field-reports`.
+- [x] Bot is invited to `#alerts`.
+- [x] Bot is invited to `#routes`.
+- [x] Bot is invited to `#shelters`.
+- [x] Bot is invited to `#supplies`.
+- [x] Bot is invited to `#volunteers`.
+- [x] Bot is invited to `#coordination`.
+- [x] `.env` has `SLACK_BOT_TOKEN`.
+- [x] `.env` has `SLACK_APP_TOKEN`.
+- [x] `.env` has `SLACK_COORDINATION_CHANNEL_ID`.
 - [ ] `.env` sets `SENTINEL_FORCE_MOCKS=false` for the live recording.
 - [ ] `.env` keeps `SENTINEL_USE_LLM=false` for the primary recording.
 

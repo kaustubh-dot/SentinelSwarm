@@ -1,136 +1,253 @@
 # SentinelSwarm
 
-SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Builder Challenge. The demo story is monsoon flood response in Zone B: scattered field reports, route updates, shelter capacity, volunteers, and supplies become an evidence-linked, human-approved action plan inside Slack.
+**A Slack-native crisis coordination agent for monsoon flood response.**
 
-## Core Demo
+Built for the Slack Agent Builder Challenge, SentinelSwarm turns scattered Slack updates from responders, route teams, shelters, supply coordinators, volunteers, and risk signals into one evidence-linked Incident Control Room. A human coordinator reviews the plan, approves it, and only then posts the final action plan to `#coordination`.
+
+The demo is intentionally focused: **Zone B monsoon flood response** for a campus, NGO, or volunteer operations team.
+
+![SentinelSwarm turns scattered Slack reports into an action plan](docs/assets/readme-illustrations/01-slack-chaos-action-plan.png)
+
+## Why SentinelSwarm
+
+During a fast-moving flood response, the hard part is not only knowing that something happened. It is finding the right context quickly enough to act safely:
+
+- Which Slack reports are about the same incident?
+- Which route is blocked, and which one is still usable?
+- Which shelter has capacity?
+- Which volunteers and supplies match the need?
+- What evidence supports the recommendation?
+- Who approved the final plan?
+
+SentinelSwarm keeps that workflow inside Slack. It uses Slack Real-Time Search when available, combines the retrieved context with local operational data and weather/flood signals, and renders a concise Block Kit control room that is built for human review.
+
+## Product Demo
+
+The main interaction is one Slack mention:
 
 ```txt
 @SentinelSwarm analyze Zone B risk
--> Incident Control Room appears
--> Evidence Ledger shows why the plan was created
--> Refresh Analysis can rerun after a new route update
--> Approve Plan, which reveals Post to Coordination
--> Post to Coordination
--> #coordination receives the final action plan
 ```
+
+SentinelSwarm replies in thread with an Incident Control Room that includes:
+
+- Risk summary for Zone B.
+- Source status for Slack context, weather, flood, and planner mode.
+- Evidence Ledger with cited report snippets.
+- Priority incidents and severity ranking.
+- Route conflicts and safer route suggestions.
+- Shelter, volunteer, and supply matches.
+- Recommended action plan.
+- Human approval controls.
+- Decision-support disclaimer.
+
+![Evidence ledger ties recommendations to Slack snippets and operational facts](docs/assets/readme-illustrations/02-evidence-ledger.png)
 
 ## 3-Minute Judge Flow
 
-1. Show seeded Slack chaos across `#alerts`, `#field-reports`, `#routes`, `#shelters`, `#supplies`, and `#volunteers`.
+1. Show Slack chaos across `#alerts`, `#field-reports`, `#routes`, `#shelters`, `#supplies`, and `#volunteers`.
 2. In `#field-reports`, run `@SentinelSwarm analyze Zone B risk`.
-3. Review the Block Kit Incident Control Room: evidence, source statuses, risk signals, severity, routes, shelter, volunteers, supplies, and recommended plan.
-4. Add a changed route update and click `Refresh Analysis` to show the plan updates from Slack context.
+3. Review the Incident Control Room: evidence, risk signals, severity, routes, shelter, volunteers, supplies, and recommended plan.
+4. Add a changed route update and click `Refresh Analysis` to prove the plan can update from Slack context.
 5. Click `Approve Plan`.
 6. Click `Post to Coordination`.
-7. Show the final approved plan in `#coordination`.
+7. Show the final approved action plan in `#coordination`.
 
-## Why It Is Roadblock-Safe
+![Human approval boundary before posting to coordination](docs/assets/readme-illustrations/03-human-approval-boundary.png)
 
-The app is designed to work even if external services fail:
+## What Makes It Slack-Native
 
-- Real-Time Search failure -> local `mockContext.json`, with live Slack channel scan used only as optional enrichment when available
-- Weather API failure -> local `mockWeather.json`
-- Flood API failure -> local `mockFlood.json`
-- Gemini refinement is optional and off by default. If the API key is missing, Gemini fails, or the model returns invalid JSON after one schema-repair retry, SentinelSwarm uses the deterministic fallback planner.
+- **Starts from a real Slack mention.** The primary demo trigger is `app_mention`, which is the safest path for Slack Real-Time Search because the event can provide the required action token.
+- **Searches Slack context.** SentinelSwarm attempts `assistant.search.context` before falling back to deterministic local context.
+- **Uses Block Kit as the control surface.** The plan is not a generic chatbot paragraph; it is a Slack Incident Control Room with sections, evidence, source statuses, and buttons.
+- **Requires human approval.** The app never posts final assignments automatically.
+- **Posts where teams coordinate.** Approved plans are sent to `#coordination` as clean responder-ready instructions.
 
-## Setup
+## Roadblock-Safe By Design
 
-1. Create a Slack app from `manifest.yaml`.
-2. Enable Socket Mode and create an app-level token with `connections:write`.
-3. Install the app to your Slack developer sandbox.
-4. Invite the bot to the demo channels.
-5. Copy `.env.example` to `.env` and fill the Slack tokens.
-   - For live recording, set `SENTINEL_FORCE_MOCKS=false`.
-   - Use `SENTINEL_FORCE_MOCKS=true` only for fallback rehearsal.
-   - Leave `SENTINEL_USE_LLM=false` for the most reliable demo path.
-6. Install dependencies and run:
+The demo continues to work even when external services fail. Every dependency has a deterministic fallback:
+
+| Dependency | Primary path | Fallback |
+| --- | --- | --- |
+| Slack context | Real-Time Search via `assistant.search.context` | `src/data/mockContext.json`, optionally enriched by live channel scan |
+| Weather | Open-Meteo weather API | `src/data/mockWeather.json` |
+| Flood risk | Open-Meteo flood API | `src/data/mockFlood.json` |
+| Planning refinement | Optional Gemini adapter | Deterministic fallback planner |
+| LLM JSON | Zod-validated structured output | One schema retry, then fallback planner |
+| Final posting | Configured `SLACK_COORDINATION_CHANNEL_ID` | Readable Slack setup hint |
+
+![Roadblock-safe fallbacks keep the demo producing a valid plan](docs/assets/readme-illustrations/04-roadblock-safe-fallbacks.png)
+
+## Tech Stack
+
+- Node.js 20+
+- TypeScript strict mode
+- Slack Bolt for JavaScript
+- Slack Socket Mode
+- Slack Web API and Real-Time Search
+- Zod schemas for runtime validation
+- Local JSON operational data
+- Open-Meteo weather and flood signals
+- Optional Gemini refinement with deterministic fallback
+- Vitest test suite
+
+## Quick Start
+
+### 1. Install Dependencies
 
 ```bash
 npm install
+```
+
+### 2. Create A Slack App
+
+Create a Slack app from [manifest.yaml](manifest.yaml), then enable Socket Mode and install the app to your Slack developer sandbox.
+
+The manifest requests the core bot scopes used by the demo:
+
+- `app_mentions:read`
+- `channels:join`
+- `channels:read`
+- `channels:history`
+- `chat:write`
+- `search:read.public`
+
+Full setup notes are in [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md).
+
+### 3. Configure Environment
+
+Copy [.env.example](.env.example) to `.env` and fill in:
+
+```txt
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_APP_TOKEN=xapp-...
+SLACK_COORDINATION_CHANNEL_ID=C...
+SENTINEL_FORCE_MOCKS=false
+SENTINEL_USE_LLM=false
+```
+
+For the most reliable judged demo, keep `SENTINEL_USE_LLM=false`. Gemini is optional and not required for the main workflow.
+
+### 4. Create Demo Channels
+
+Create these public Slack channels and invite SentinelSwarm to each one:
+
+```txt
+#alerts
+#field-reports
+#routes
+#shelters
+#supplies
+#volunteers
+#coordination
+```
+
+### 5. Verify Slack Access
+
+```bash
+npm run smoke:slack
+```
+
+On Windows PowerShell, use:
+
+```powershell
+npm.cmd run smoke:slack
+```
+
+The smoke test checks token format, Socket Mode readiness, demo channel access, and `#coordination` setup without printing secrets.
+
+### 6. Run The App
+
+```bash
 npm run dev
 ```
 
-See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/MANUAL_SETUP.md).
-For the hosted backup run, see [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md).
-
-## Demo And Submission Assets
-
-- [Demo seed messages](docs/DEMO_SEED_MESSAGES.md)
-- [Demo script](docs/DEMO_SCRIPT.md)
-- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
-- [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
-- [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
-- [Render deploy notes](docs/RENDER_DEPLOY.md)
-- [Judge Q&A](docs/JUDGE_QA.md)
-- [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
-
-Operator proof and live-run docs such as `DEMO_PROOF.md`, `OWNER_TODO.md`, and `OWNER_LIVE_RUNBOOK.md` are kept in `docs/` so the remaining live-demo work stays visible without duplicating old status ledgers.
-
-## Seed The Demo Workspace
-
-Preview the fictional Zone B seed pack without touching Slack:
-
-```powershell
-npm.cmd run seed:slack
-```
-
-After the sandbox channels exist and the bot is invited, post the seed pack intentionally:
-
-```powershell
-npm.cmd run seed:slack -- --post
-```
-
-The seed command never sends the bot mention. Trigger the demo yourself from `#field-reports` with `@SentinelSwarm analyze Zone B risk`.
-
-## Optional Gemini Refinement
-
-The live Slack demo does not require an LLM. Keep the main Zone B run focused on:
+Then in Slack:
 
 ```txt
-SENTINEL_FORCE_MOCKS=false
-SENTINEL_USE_LLM=false
 @SentinelSwarm analyze Zone B risk
 ```
 
-To experiment with Gemini refinement after the deterministic demo works, set these only in your local ignored `.env` file:
+SentinelSwarm uses Socket Mode, so the local demo does not need a public webhook URL or deployed backend.
 
-```txt
-SENTINEL_USE_LLM=true
-GOOGLE_API_KEY=...
-GEMINI_MODEL=gemini-3.5-flash
+## Seed A Demo Workspace
+
+Preview the fictional Zone B seed pack without posting to Slack:
+
+```bash
+npm run seed:slack
 ```
 
-This layer may polish or refine the structured plan, but it is never required for the demo. Missing credentials, API errors, timeouts, and invalid LLM JSON all fall back to the deterministic planner so approval and posting still work.
+Post the seed messages after the Slack channels exist and the bot is invited:
 
-Privacy note: enable Gemini refinement only when your Slack demo data is fictional or you are allowed to send it to Google. SentinelSwarm redacts raw Slack user IDs, channel IDs, permalinks, and URLs before the optional Gemini call, but the report text is still included for planning context. Never commit `GOOGLE_API_KEY`.
+```bash
+npm run seed:slack -- --post
+```
 
-## Test
+The seed command does not send the bot mention. Trigger the analysis yourself from `#field-reports`:
+
+```txt
+@SentinelSwarm analyze Zone B risk
+```
+
+## Test And Build
 
 ```bash
 npm test
 npm run build
-npm run smoke:slack
+npm run check:secrets
 ```
 
-On Windows PowerShell, prefer the `.cmd` forms if script execution policy blocks npm shims:
+On Windows PowerShell:
 
 ```powershell
 npm.cmd test
-npm.cmd run check:secrets
 npm.cmd run build
-npm.cmd run seed:slack
-npm.cmd run smoke:slack
-npm.cmd run dev
+npm.cmd run check:secrets
 ```
 
-`npm run smoke:slack` checks Slack tokens, Socket Mode token validity, demo channel access, and `#coordination` setup without printing secrets.
+Useful additional checks:
 
-Use the opt-in write check only when you are comfortable posting a harmless test message to `#coordination`:
+```bash
+npm run typecheck
+npm run smoke:slack
+```
+
+Use the optional write-path check only when you are comfortable posting a harmless test message to `#coordination`:
 
 ```bash
 npm run smoke:slack -- --post-test
 ```
 
-## MCP Stance
+## Project Structure
 
-MCP is optional. The main required hackathon technology is Real-Time Search API. Add a small SentinelSwarm resource MCP server only after the Slack demo is stable.
+```txt
+src/
+  app.ts                 Slack Bolt app bootstrap
+  config.ts              Environment validation
+  slack/                 Slack handlers, Block Kit, RTS, final posting
+  tools/                 Weather, flood, and local data loading
+  planner/               Severity, schemas, prompt, LLM, fallback planner
+  data/                  Volunteers, supplies, routes, shelters, zones, mocks
+
+tests/                   Vitest coverage for planner, Slack blocks, data, RTS, safety checks
+docs/                    Setup, demo script, architecture, judge Q&A, submission assets
+```
+
+## Documentation
+
+- [Slack setup](docs/SLACK_SETUP.md)
+- [Manual setup](docs/MANUAL_SETUP.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Demo script](docs/DEMO_SCRIPT.md)
+- [Demo seed messages](docs/DEMO_SEED_MESSAGES.md)
+- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
+- [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
+- [Judge Q&A](docs/JUDGE_QA.md)
+- [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
+
+## Safety Model
+
+SentinelSwarm is decision support, not emergency authority. It helps coordinators organize evidence and draft a plan, but final dispatch requires explicit human approval. The app is designed for fictional demo data or authorized operational data only.
+
+Optional Gemini refinement should stay disabled unless the Slack reports are fictional or approved for processing by Google. When enabled, SentinelSwarm redacts raw Slack user IDs, channel IDs, permalinks, and URLs before the optional Gemini call, but report text is still included for planning context. Never commit `GOOGLE_API_KEY`.

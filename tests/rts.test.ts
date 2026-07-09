@@ -74,6 +74,41 @@ describe("searchSlackContext", () => {
     expect(context.evidence.some((item) => item.source === "Live Slack channel scan" && item.text.includes("R2"))).toBe(true);
   });
 
+  it("prioritizes live Slack scan evidence ahead of mock fallback evidence during refresh-style scans", async () => {
+    const client = createClient(async (method, params) => {
+      if (method === "conversations.list") {
+        return {
+          channels: [
+            {
+              id: "CROUTES",
+              name: "routes"
+            }
+          ]
+        };
+      }
+
+      if (method === "conversations.history") {
+        expect(params.channel).toBe("CROUTES");
+        return {
+          messages: [
+            {
+              text: "Zone B route update: Route R2 through Riverside Lane is now open for emergency vehicles. Route R4 via Hill School Road is blocked by stalled traffic."
+            }
+          ]
+        };
+      }
+
+      throw new Error(`Unexpected method ${method}`);
+    });
+
+    const context = await searchSlackContext(client, undefined, "Zone B", false);
+    const firstMockIndex = context.evidence.findIndex((item) => item.sourceType === "mock");
+    const routeUpdateIndex = context.evidence.findIndex((item) => item.text.includes("R2 through Riverside Lane is now open"));
+
+    expect(routeUpdateIndex).toBeGreaterThanOrEqual(0);
+    expect(firstMockIndex).toBeGreaterThan(routeUpdateIndex);
+  });
+
   it("does not collect explicit messages for another zone during channel scan", async () => {
     const client = createClient(async (method) => {
       if (method === "conversations.list") {

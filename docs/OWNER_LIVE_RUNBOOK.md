@@ -1,6 +1,7 @@
 # Owner Live Runbook
 
 Use this when you are operating the live SentinelSwarm Slack demo. This is your step-by-step path from local preflight to recording.
+The judged runtime is local Slack Socket Mode. No public inbound webhook or hosted backend is required for the recorded demo.
 
 ## 1. Preflight
 

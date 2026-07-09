@@ -283,7 +283,7 @@ const appendLiveScanEvidence = async (
 
     reasons.push(`Optional Slack channel scan added ${liveEvidence.length} enrichment result(s)${failureNote ? `; ${failureNote}` : ""}`);
     return {
-      evidence: [...liveEvidence.slice(0, 2), ...baseEvidence, ...liveEvidence.slice(2)],
+      evidence: [...liveEvidence, ...baseEvidence],
       slackScan: {
         attempted: true,
         matched: liveEvidence.length,

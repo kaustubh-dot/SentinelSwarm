@@ -5,15 +5,15 @@ Use this page as the factual evidence log for the final live Slack smoke test. D
 ## Latest Live Slack Smoke Test
 
 - Date: 2026-07-09
-- Time: 15:37
+- Time: 20:59
 - Time zone: IST (UTC+05:30)
-- Tester: Codex CLI smoke test with live Slack credentials
-- Result: Slack smoke preflight passed. Full hosted Incident Control Room approval/post run is not yet verified.
+- Tester: Codex + live Slack sandbox operator
+- Result: Local Socket Mode preflight passed, full approval/post/handover path verified, and Refresh Analysis verified after the route-update fix.
 
 ## Workspace / Sandbox
 
 - Slack workspace name: SentinelSwarm
-- Slack sandbox URL:
+- Slack sandbox URL: Pending Devpost entry
 - Slack app name: SentinelSwarm
 - Demo channels verified:
   - `#field-reports`: bot member and history readable (`C0BFGD0MPDM`)
@@ -30,75 +30,77 @@ Use this page as the factual evidence log for the final live Slack smoke test. D
 @SentinelSwarm analyze Zone B risk
 ```
 
-- Trigger channel:
-- Thread or channel response:
-- App running in Socket Mode:
-- App log reference:
+- Trigger channel: `#field-reports` (`C0BFGD0MPDM`)
+- Thread or channel response: Incident Control Room appeared in the `#field-reports` thread.
+- Latest full post run thread: `1783606755.870279`
+- Refresh-fixed verification thread: `1783610881.384279`
+- App running in Socket Mode: Yes.
+- App log reference: `.logs/sentinelswarm-dev.out.log` showed `SentinelSwarm is running in Socket Mode.`
 
 ## Dependency Status
 
 | Dependency | Live result | Fallback result | Notes |
 | --- | --- | --- | --- |
-| Real-Time Search (`assistant.search.context`) | Not yet verified | Not yet verified | Fallback should use `src/data/mockContext.json`; live Slack scan may enrich fallback evidence when available. |
-| Weather | Not yet verified | Not yet verified | Fallback should use `src/data/mockWeather.json`. |
-| Flood | Not yet verified | Not yet verified | Fallback should use `src/data/mockFlood.json`. |
-| Planner | Not yet verified | Not yet verified | Invalid or unavailable LLM output should fall back to deterministic planner. |
+| Real-Time Search (`assistant.search.context`) | Attempted, unavailable in latest captured card | Verified | Card showed `RTS unavailable | mock fallback | Slack scan +6`; live Slack scan supplied route evidence. |
+| Weather | Verified live | Not needed in latest run | Card showed `live weather`. |
+| Flood | Verified live | Not needed in latest run | Card showed `live flood`. |
+| Planner | Deterministic planner verified | Verified by default mode | Card showed `deterministic`; `.env` had `SENTINEL_USE_LLM=false`. |
 
-Smoke note: `npm.cmd run smoke:slack` passed on 2026-07-09 at 15:37 IST. It verified Slack tokens, Socket Mode app token, public demo channel access, and `#coordination` target membership. It did not exercise the Incident Control Room buttons.
+Smoke note: `npm.cmd run smoke:slack` passed on 2026-07-09 at 20:59 IST. It verified Slack tokens, Socket Mode app token, public demo channel access, and `#coordination` target membership.
 
 ## Incident Control Room Checks
 
-- Card appears after app mention:
-- Risk summary is shown:
-- Evidence Ledger includes 2-4 snippets:
-- Status indicators are truthful:
-- Priority incidents are shown:
-- Route conflicts are shown:
-- Volunteer matches are shown:
-- Supply actions are shown:
-- Final recommended plan is shown:
-- Confidence level is shown:
-- Decision-support disclaimer is shown:
-- Refresh Analysis click tested:
-- What Changed section appears after refresh when context changes:
-- Generate Handover click tested:
+- Card appears after app mention: Yes.
+- Risk summary is shown: Yes.
+- Evidence Ledger includes 2-4 snippets: Yes; latest refresh-fixed card showed current Slack report and route-update evidence.
+- Status indicators are truthful: Yes; card showed `RTS unavailable | mock fallback | Slack scan +6 | live weather | live flood | deterministic`.
+- Priority incidents are shown: Yes.
+- Route conflicts are shown: Yes; latest refresh-fixed card showed `R2 OPEN` and `R4 BLOCKED` from Slack evidence.
+- Volunteer matches are shown: Yes.
+- Supply actions are shown: Yes.
+- Final recommended plan is shown: Yes.
+- Confidence level is shown: Yes.
+- Decision-support disclaimer is shown: Yes.
+- Refresh Analysis click tested: Yes.
+- What Changed section appears after refresh when context changes: Yes.
+- Generate Handover click tested: Yes; handover reply appeared in the thread.
 
 ## Human Approval Checks
 
-- `approve_plan` button visible:
-- Approve Plan click tested:
-- Card state after approval:
-- `post_plan` button hidden before approval:
-- `post_plan` button visible after approval:
-- Final plan was not posted before approval:
+- `approve_plan` button visible: Yes.
+- Approve Plan click tested: Yes.
+- Card state after approval: Yes.
+- `post_plan` button hidden before approval: Yes.
+- `post_plan` button visible after approval: Yes.
+- Final plan was not posted before approval: Yes.
 
 ## Coordination Post Check
 
-- `#coordination` channel ID configured:
-- Post to Coordination click tested:
-- Final `#coordination` post created:
-- Final post timestamp/link:
+- `#coordination` channel ID configured: Yes, `C0BG1G78DFE`.
+- Post to Coordination click tested: Yes.
+- Final `#coordination` post created: Yes.
+- Final post timestamp/link: `1783606802.373519` / `https://sentinelswarm.slack.com/archives/C0BG1G78DFE/p1783606802373519`
 
 ## Screenshot / Video References
 
-- Incident Control Room screenshot:
-- Evidence Ledger screenshot:
-- Approval state screenshot:
-- Final `#coordination` post screenshot:
-- Demo video file/link:
-- Devpost demo video link:
+- Incident Control Room screenshot: Pending final recording capture.
+- Evidence Ledger screenshot: Pending final recording capture.
+- Approval state screenshot: Pending final recording capture.
+- Final `#coordination` post screenshot: Pending final recording capture.
+- Demo video file/link: Pending final recording upload.
+- Devpost demo video link: Pending final recording upload.
 
 ## Known Issues Before Submission
 
-- Open issue 1: Hosted Render run is not verified yet. Local Socket Mode remains the fallback for recording.
-- Open issue 2:
-- Open issue 3:
+- Open issue 1: Final public demo video link is still pending.
+- Open issue 2: Judge sandbox invites must be confirmed before submission.
+- Open issue 3: Forced mock-mode rehearsal should be run once before final submission.
 
 ## Submission Sign-Off
 
-- Build passed:
-- Tests passed:
-- Secret scan passed:
-- Forced mock-mode run completed:
-- Latest proof reviewed by:
-- Ready for submission: No, pending live verification.
+- Build passed: Yes.
+- Tests passed: Yes.
+- Secret scan passed: Yes.
+- Forced mock-mode run completed: Pending.
+- Latest proof reviewed by: Codex + live Slack operator.
+- Ready for submission: No, pending final video link, judge invites, and forced mock rehearsal.

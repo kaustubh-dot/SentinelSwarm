@@ -59,7 +59,7 @@ afterEach(() => {
 });
 
 describe("health endpoint", () => {
-  it("returns safe hosted status without secrets or Slack identifiers", async () => {
+  it("returns safe health status without secrets or Slack identifiers", async () => {
     const result = await requestJson("/healthz");
     const bodyText = JSON.stringify(result.body);
 
@@ -78,7 +78,7 @@ describe("health endpoint", () => {
     expect(bodyText).not.toContain("CSECRET");
   });
 
-  it("returns the same safe hosted status from the root Space route", async () => {
+  it("returns the same safe health status from the root route", async () => {
     const result = await requestJson("/");
 
     expect(result.statusCode).toBe(200);
@@ -109,7 +109,7 @@ describe("health endpoint", () => {
     });
   });
 
-  it("only enables hosted health when requested by env", () => {
+  it("only enables the health server when requested by env", () => {
     expect(shouldStartHealthServer({})).toBe(false);
     expect(shouldStartHealthServer({ SENTINEL_HEALTH_SERVER: "true" })).toBe(true);
     expect(shouldStartHealthServer({ PORT: "7860" })).toBe(true);

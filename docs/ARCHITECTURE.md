@@ -128,9 +128,9 @@ flowchart TD
   LiveRisk --> TryLLM["Try LLM planner if configured"]
   MockRisk --> TryLLM
   TryLLM -->|SENTINEL_USE_LLM=false| Deterministic["Use fallback planner"]
-  TryLLM -->|valid schema| Render["Render Block Kit"]
+  TryLLM -->|valid schema| BlockKit["Block Kit output"]
   TryLLM -->|missing key/API error/invalid schema| Deterministic
-  Deterministic --> Render
+  Deterministic --> BlockKit
 ```
 
 ## Planned Module Boundaries

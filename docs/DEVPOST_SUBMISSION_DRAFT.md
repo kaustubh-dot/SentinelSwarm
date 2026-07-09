@@ -49,7 +49,7 @@ During floods and landslides, response teams often already have the facts they n
 - Real-Time Search API through `assistant.search.context`.
 - Block Kit for the main interface.
 - Button interactivity for refresh, approval, posting, and handover.
-- Socket Mode for reliable local demo execution.
+- Socket Mode for reliable local demo execution. No public inbound webhook or public backend URL is required; the Node.js app connects outbound to Slack.
 
 ## Fallback-Safe Design
 

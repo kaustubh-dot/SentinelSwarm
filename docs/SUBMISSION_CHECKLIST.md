@@ -31,6 +31,7 @@
 - Architecture diagram.
 - Screenshot or GIF of the Incident Control Room, if available after recording.
 - Slack developer sandbox URL.
+- Public backend URL is not required because SentinelSwarm uses Slack Socket Mode.
 - Testing instructions.
 
 ## Demo Video Checklist

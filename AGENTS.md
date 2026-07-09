@@ -39,7 +39,7 @@ Use:
 - Zod for schemas.
 - Local JSON data.
 - Open-Meteo weather and flood APIs where available.
-- OpenAI-compatible LLM adapter with deterministic mock fallback.
+- Gemini LLM adapter with deterministic mock fallback.
 
 ## Required Fallback Rule
 

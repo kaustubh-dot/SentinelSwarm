@@ -90,7 +90,7 @@ Smoke note: `npm.cmd run smoke:slack` passed on 2026-07-09 at 15:37 IST. It veri
 
 ## Known Issues Before Submission
 
-- Open issue 1: Hugging Face Space repo `CooLBoT22/sentinelswarm-slack-bot` is not created yet. The HF Jobs deploy helper was blocked by insufficient prepaid credits, so Space creation/upload must use HF web UI, local HF CLI after login, or a direct token-backed git push.
+- Open issue 1: Hosted Render run is not verified yet. Local Socket Mode remains the fallback for recording.
 - Open issue 2:
 - Open issue 3:
 

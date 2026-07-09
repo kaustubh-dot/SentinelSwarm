@@ -1,12 +1,3 @@
----
-title: SentinelSwarm
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # SentinelSwarm
 
 SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Builder Challenge. The demo story is monsoon flood response in Zone B: scattered field reports, route updates, shelter capacity, volunteers, and supplies become an evidence-linked, human-approved action plan inside Slack.
@@ -60,7 +51,7 @@ npm run dev
 ```
 
 See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) and [docs/MANUAL_SETUP.md](docs/MANUAL_SETUP.md).
-For a Hugging Face Docker Space backup run, see [docs/HUGGINGFACE_DEPLOY.md](docs/HUGGINGFACE_DEPLOY.md).
+For the hosted backup run, see [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md).
 
 ## Demo And Submission Assets
 
@@ -69,7 +60,7 @@ For a Hugging Face Docker Space backup run, see [docs/HUGGINGFACE_DEPLOY.md](doc
 - [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
 - [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
 - [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
-- [Hugging Face deploy notes](docs/HUGGINGFACE_DEPLOY.md)
+- [Render deploy notes](docs/RENDER_DEPLOY.md)
 - [Judge Q&A](docs/JUDGE_QA.md)
 - [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
 

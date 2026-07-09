@@ -78,10 +78,15 @@ sequenceDiagram
   alt RTS succeeds
     R-->>A: messages, files, permalinks
   else RTS unavailable
-    A->>A: load mockContext.json
+    A->>A: scan live demo channels
+    A->>A: load mockContext.json if live scan is unavailable
   end
   A->>A: combine context + local resources + risk signals
   A-->>S: Threaded Block Kit Incident Control Room
+  U->>S: Optional Refresh Analysis after new route update
+  S->>A: block_actions refresh_plan
+  A->>A: rebuild from original report + latest Slack context
+  A-->>S: Update same control room and require approval again
   U->>S: Click Approve Plan
   S->>A: block_actions approve_plan
   A-->>S: Mark plan approved

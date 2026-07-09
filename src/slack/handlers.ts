@@ -14,6 +14,7 @@ import { searchSlackContext } from "./rts";
 const planStore = createLocalPlanStore();
 
 type SlackClientLike = {
+  apiCall?: (method: string, params: Record<string, unknown>) => Promise<unknown>;
   chat: {
     postEphemeral: (args: Record<string, unknown>) => Promise<unknown>;
     postMessage: (args: Record<string, unknown>) => Promise<unknown>;
@@ -34,6 +35,11 @@ type ActionHandlerDeps = {
 
 type PostPlanDeps = ActionHandlerDeps & {
   config: Pick<AppConfig, "coordinationChannelId">;
+};
+
+type RefreshPlanDeps = ActionHandlerDeps & {
+  config: AppConfig;
+  refreshPlan?: typeof createRefreshedPlan;
 };
 
 const userLabel = (body: any): string => {
@@ -61,6 +67,18 @@ const createReportEvidence = (incident: ParsedIncidentReport, channelId: string)
   sourceType: "slack"
 });
 
+const renderOptionsForStoredPlan = (stored: {
+  state: "draft" | "approved" | "posted";
+  approvedBy?: string;
+  refreshCount?: number;
+  lastRefreshedAt?: string;
+}) => ({
+  state: stored.state,
+  approvedBy: stored.approvedBy,
+  refreshCount: stored.refreshCount,
+  lastRefreshedAt: stored.lastRefreshedAt
+});
+
 const slackError = (error: unknown): string => {
   if (typeof error === "object" && error !== null && "data" in error) {
     const data = (error as { data?: { error?: string } }).data;
@@ -70,6 +88,42 @@ const slackError = (error: unknown): string => {
   }
 
   return error instanceof Error ? error.message : "unknown_error";
+};
+
+const createRefreshedPlan = async ({
+  client,
+  config,
+  stored,
+  reportEvidence
+}: {
+  client: SlackClientLike;
+  config: AppConfig;
+  stored: NonNullable<Awaited<ReturnType<LocalPlanStore["get"]>>>;
+  reportEvidence: Evidence;
+}): Promise<IncidentPlan> => {
+  const incident = parseIncidentReport(reportEvidence.text);
+  const localData = loadLocalData();
+  const zone = findZone(localData.zones, incident.zoneInput || stored.plan.zoneName);
+  const context = await searchSlackContext(client as any, undefined, zone.name, config.forceMocks);
+  const weather = await getWeatherRisk(zone, config.forceMocks);
+  const flood = await getFloodRisk(zone, config.forceMocks);
+  const planner = await createIncidentPlan(
+    {
+      zone,
+      localData,
+      evidence: [reportEvidence, ...context.evidence],
+      contextStatus: context.status,
+      weather,
+      flood,
+      incident
+    },
+    config
+  );
+
+  return {
+    ...planner.plan,
+    planId: stored.plan.planId
+  };
 };
 
 export const handleApprovePlanAction = async ({ body, client, logger, planStore }: ActionHandlerDeps): Promise<void> => {
@@ -98,10 +152,7 @@ export const handleApprovePlanAction = async ({ body, client, logger, planStore 
       channel: updateChannel,
       ts: updateTs,
       text: `${stored.plan.zoneName} plan approved.`,
-      blocks: renderIncidentControlRoom(stored.plan, {
-        state: "approved",
-        approvedBy: stored.approvedBy
-      })
+      blocks: renderIncidentControlRoom(stored.plan, renderOptionsForStoredPlan(stored))
     });
   } catch (error) {
     logger?.error(error);
@@ -167,10 +218,7 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
       channel: updateChannel,
       ts: updateTs,
       text: `${stored.plan.zoneName} plan posted to coordination.`,
-      blocks: renderIncidentControlRoom(stored.plan, {
-        state: "posted",
-        approvedBy: stored.approvedBy
-      })
+      blocks: renderIncidentControlRoom(stored.plan, renderOptionsForStoredPlan(stored))
     });
   } catch (error) {
     logger?.error(error);
@@ -178,6 +226,77 @@ export const handlePostPlanAction = async ({ body, client, logger, planStore, co
       channel: updateChannel,
       user: body.user.id,
       text: `The plan was posted to coordination, but I could not update this control room card (${slackError(error)}).`
+    });
+  }
+};
+
+export const handleRefreshPlanAction = async ({ body, client, logger, planStore, config, refreshPlan = createRefreshedPlan }: RefreshPlanDeps): Promise<void> => {
+  const planId = body.actions?.[0]?.value;
+  const stored = await planStore.get(planId);
+  const channel = actionChannelId(body);
+
+  if (!stored) {
+    await client.chat.postEphemeral({
+      channel,
+      user: body.user.id,
+      text: "I could not find that plan. Please rerun the analysis."
+    });
+    return;
+  }
+
+  if (stored.state === "posted") {
+    await client.chat.postEphemeral({
+      channel,
+      user: body.user.id,
+      text: "This plan has already been posted to coordination. Start a new analysis to capture a new incident state."
+    });
+    return;
+  }
+
+  const reportEvidence = stored.reportEvidence ?? stored.plan.evidence.find((item) => item.id === "field-report-current");
+  if (!reportEvidence) {
+    await client.chat.postEphemeral({
+      channel,
+      user: body.user.id,
+      text: "I could not find the original field report for this plan. Please rerun the analysis."
+    });
+    return;
+  }
+
+  const updateChannel = actionChannelId(body, stored.sourceChannel);
+  const updateTs = actionMessageTs(body, stored.messageTs);
+
+  try {
+    const refreshedPlan = await refreshPlan({
+      client,
+      config,
+      stored,
+      reportEvidence
+    });
+    const refreshed = {
+      ...stored,
+      plan: refreshedPlan,
+      reportEvidence,
+      state: "draft" as const,
+      approvedBy: undefined,
+      refreshCount: (stored.refreshCount ?? 0) + 1,
+      lastRefreshedAt: new Date().toISOString()
+    };
+
+    await planStore.set(planId, refreshed);
+
+    await client.chat.update({
+      channel: updateChannel,
+      ts: updateTs,
+      text: `${refreshed.plan.zoneName} analysis refreshed. Awaiting approval.`,
+      blocks: renderIncidentControlRoom(refreshed.plan, renderOptionsForStoredPlan(refreshed))
+    });
+  } catch (error) {
+    logger?.error(error);
+    await client.chat.postEphemeral({
+      channel: updateChannel,
+      user: body.user.id,
+      text: `Could not refresh the analysis (${slackError(error)}). The current plan is unchanged.`
     });
   }
 };
@@ -256,7 +375,9 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
 
       await planStore.set(plan.planId, {
         plan,
+        reportEvidence,
         state: "draft",
+        refreshCount: 0,
         messageTs: (response as any).ts,
         sourceChannel: eventAny.channel,
         threadTs
@@ -285,6 +406,11 @@ export const registerHandlers = (app: App, config: AppConfig): void => {
   app.action("post_plan", async ({ ack, body, client, logger }) => {
     await ack();
     await handlePostPlanAction({ body, client: client as any, logger, planStore, config });
+  });
+
+  app.action("refresh_plan", async ({ ack, body, client, logger }) => {
+    await ack();
+    await handleRefreshPlanAction({ body, client: client as any, logger, planStore, config });
   });
 
   app.action("generate_handover", async ({ ack, body, client }) => {

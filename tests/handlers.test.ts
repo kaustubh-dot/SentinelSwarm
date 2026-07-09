@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createFallbackPlan } from "../src/planner/fallbackPlanner";
 import type { StoredPlan } from "../src/slack/planStore";
-import { handleApprovePlanAction, handleGenerateHandoverAction, handlePostPlanAction } from "../src/slack/handlers";
+import { handleApprovePlanAction, handleGenerateHandoverAction, handlePostPlanAction, handleRefreshPlanAction } from "../src/slack/handlers";
 import { findZone, loadLocalData, loadMockContext } from "../src/tools/localData";
 
 const makePlan = () => {
@@ -44,12 +44,25 @@ const makeBody = (planId = "plan-1") => ({
 });
 
 const makeClient = () => ({
+  apiCall: vi.fn().mockResolvedValue({ ok: true }),
   chat: {
     postEphemeral: vi.fn().mockResolvedValue({ ok: true }),
     postMessage: vi.fn().mockResolvedValue({ ok: true }),
     update: vi.fn().mockResolvedValue({ ok: true })
   }
 });
+
+const makeConfig = () =>
+  ({
+    slackBotToken: "xoxb-test",
+    slackAppToken: "xapp-test",
+    coordinationChannelId: "CCOORD",
+    useLlm: false,
+    googleApiKey: undefined,
+    geminiModel: "gemini-3.5-flash",
+    forceMocks: true,
+    logLevel: "info"
+  }) as const;
 
 const makeStore = (stored: StoredPlan | undefined) => ({
   value: stored,
@@ -61,11 +74,20 @@ const makeStore = (stored: StoredPlan | undefined) => ({
 
 const makeStoredPlan = (state: StoredPlan["state"]): StoredPlan => ({
   plan: makePlan(),
+  reportEvidence: {
+    id: "field-report-current",
+    source: "Current Slack field report",
+    channel: "#field-reports",
+    text: "@SentinelSwarm analyze Zone B risk",
+    confidence: 0.94,
+    sourceType: "slack"
+  },
   state,
   messageTs: "1710000000.000300",
   sourceChannel: "CCONTAINER",
   threadTs: "1710000000.000100",
   approvedBy: state === "approved" ? "coordinator" : undefined,
+  refreshCount: 0,
   updatedAt: "2026-07-08T10:00:00.000Z"
 });
 
@@ -176,6 +198,94 @@ describe("Slack action handlers", () => {
       channel: "CCONTAINER",
       thread_ts: "1710000000.000200",
       text: expect.stringContaining("*Handover Summary*")
+    });
+  });
+
+  it("refreshes an approved plan, resets it to draft, and updates the card", async () => {
+    const client = makeClient();
+    const stored = makeStoredPlan("approved");
+    const store = makeStore(stored);
+    const refreshedPlan = {
+      ...stored.plan,
+      summary: "Refreshed summary from updated Slack context."
+    };
+    const refreshPlan = vi.fn().mockResolvedValue(refreshedPlan);
+
+    await handleRefreshPlanAction({
+      body: makeBody(),
+      client,
+      planStore: store,
+      config: makeConfig(),
+      refreshPlan
+    });
+
+    expect(refreshPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client,
+        config: makeConfig(),
+        stored,
+        reportEvidence: stored.reportEvidence
+      })
+    );
+    expect(store.set).toHaveBeenCalledWith(
+      "plan-1",
+      expect.objectContaining({
+        plan: refreshedPlan,
+        state: "draft",
+        approvedBy: undefined,
+        refreshCount: 1,
+        lastRefreshedAt: expect.any(String)
+      })
+    );
+    expect(client.chat.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "CCONTAINER",
+        ts: "1710000000.000300",
+        text: "Zone B analysis refreshed. Awaiting approval.",
+        blocks: expect.any(Array)
+      })
+    );
+  });
+
+  it("blocks refresh for a posted plan", async () => {
+    const client = makeClient();
+    const store = makeStore(makeStoredPlan("posted"));
+    const refreshPlan = vi.fn();
+
+    await handleRefreshPlanAction({
+      body: makeBody(),
+      client,
+      planStore: store,
+      config: makeConfig(),
+      refreshPlan
+    });
+
+    expect(refreshPlan).not.toHaveBeenCalled();
+    expect(store.set).not.toHaveBeenCalled();
+    expect(client.chat.postEphemeral).toHaveBeenCalledWith({
+      channel: "CCONTAINER",
+      user: "UCOORD",
+      text: "This plan has already been posted to coordination. Start a new analysis to capture a new incident state."
+    });
+  });
+
+  it("reports refresh failures without changing the stored plan", async () => {
+    const client = makeClient();
+    const store = makeStore(makeStoredPlan("draft"));
+
+    await handleRefreshPlanAction({
+      body: makeBody(),
+      client,
+      planStore: store,
+      config: makeConfig(),
+      refreshPlan: vi.fn().mockRejectedValue(new Error("refresh unavailable"))
+    });
+
+    expect(store.set).not.toHaveBeenCalled();
+    expect(client.chat.postEphemeral).toHaveBeenCalledWith({
+      channel: "CCONTAINER",
+      user: "UCOORD",
+      text: "Could not refresh the analysis (refresh unavailable). The current plan is unchanged."
     });
   });
 });

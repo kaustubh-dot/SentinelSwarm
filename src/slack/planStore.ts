@@ -1,25 +1,31 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { IncidentPlanSchema, type IncidentPlan } from "../planner/schema";
+import { EvidenceSchema, IncidentPlanSchema, type Evidence, type IncidentPlan } from "../planner/schema";
 
 export type StoredPlan = {
   plan: IncidentPlan;
+  reportEvidence?: Evidence;
   approvedBy?: string;
   messageTs?: string;
   sourceChannel?: string;
   threadTs?: string;
   state: "draft" | "approved" | "posted";
+  refreshCount?: number;
+  lastRefreshedAt?: string;
   updatedAt: string;
 };
 
 const StoredPlanSchema = z.object({
   plan: IncidentPlanSchema,
+  reportEvidence: EvidenceSchema.optional(),
   approvedBy: z.string().optional(),
   messageTs: z.string().optional(),
   sourceChannel: z.string().optional(),
   threadTs: z.string().optional(),
   state: z.enum(["draft", "approved", "posted"]),
+  refreshCount: z.number().int().min(0).optional(),
+  lastRefreshedAt: z.string().optional(),
   updatedAt: z.string()
 });
 

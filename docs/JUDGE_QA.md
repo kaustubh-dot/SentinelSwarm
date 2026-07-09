@@ -14,7 +14,11 @@ Bot-token RTS calls require an `action_token`, which is available on user-initia
 
 ## What happens if Real-Time Search fails?
 
-The app falls back to `src/data/mockContext.json` and labels the source as fallback context. The demo still works.
+The app tries live Slack channel scan next, then falls back to `src/data/mockContext.json` if no live context is available. The Incident Control Room labels whether evidence came from RTS, live Slack channel context, or demo fallback context.
+
+## How do you prove it is not hardcoded?
+
+After the first Incident Control Room appears, add or edit a route update in Slack and click `Refresh Analysis`. SentinelSwarm rebuilds the plan from the original incident report plus latest Slack context, resets the plan to draft, and requires human approval again.
 
 ## What happens if weather, flood, or LLM calls fail?
 
@@ -36,6 +40,7 @@ The narrow Zone B monsoon flood story makes the three-minute demo clear: workspa
 
 - Evidence snippets from Slack context.
 - Visible RTS/weather/flood/planner statuses.
+- Refresh Analysis updating route guidance after Slack context changes.
 - A blocked route and an open route.
 - Shelter, supply, and volunteer matches.
 - Human approval before final posting.

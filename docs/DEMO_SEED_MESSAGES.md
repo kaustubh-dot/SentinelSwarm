@@ -112,6 +112,14 @@ Paste this in `#field-reports`:
 @SentinelSwarm analyze Zone B risk
 ```
 
+## Optional Refresh Proof
+
+After the Incident Control Room appears, post this in `#routes`, then click `Refresh Analysis` on the card:
+
+```txt
+Zone B route update: Route R2 through Riverside Lane is now open for emergency vehicles. Route R4 via Hill School Road is blocked by stalled traffic.
+```
+
 ## Expected Story
 
 - Slack workspace chaos is visible across channels.
@@ -122,3 +130,4 @@ Paste this in `#field-reports`:
 - Hill School shelter is selected.
 - Volunteers and supplies are matched.
 - Approval is required before posting to `#coordination`.
+- Refresh Analysis can update route guidance and returns the plan to awaiting approval.

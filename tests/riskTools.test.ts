@@ -36,4 +36,27 @@ describe("risk tools", () => {
     expect(weather.precipitationMm).toBeGreaterThan(0);
     expect(flood.floodRiskIndex).toBeGreaterThan(0);
   });
+
+  it("falls back to mock signals when live APIs return malformed success payloads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ hourly: { precipitation: [] } })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ daily: { river_discharge: [], river_discharge_mean: [] } })
+        })
+    );
+
+    const weather = await getWeatherRisk(zoneB(), false);
+    const flood = await getFloodRisk(zoneB(), false);
+
+    expect(weather.signal.source).toBe("mock");
+    expect(flood.signal.source).toBe("mock");
+    expect(weather.precipitationMm).toBeGreaterThan(0);
+    expect(flood.floodRiskIndex).toBeGreaterThan(0);
+  });
 });

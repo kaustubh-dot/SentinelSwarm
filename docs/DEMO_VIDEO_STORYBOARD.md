@@ -48,9 +48,27 @@ Narration:
 The Incident Control Room explains why the recommendation exists. It combines Slack context, weather and flood signals, local resources, and deterministic planning into one concise coordination view.
 ```
 
-## Scene 4: Approval Gate
+## Scene 4: Refresh Proof
 
-Time: 1:35-2:05
+Time: 1:35-1:55
+
+Post or show the prepared route update:
+
+```txt
+Zone B route update: Route R2 through Riverside Lane is now open for emergency vehicles. Route R4 via Hill School Road is blocked by stalled traffic.
+```
+
+Click `Refresh Analysis`.
+
+Narration:
+
+```txt
+To prove this is not hardcoded, we can add a new route update and refresh the same Incident Control Room. The plan goes back to draft and requires approval again.
+```
+
+## Scene 5: Approval Gate
+
+Time: 1:55-2:15
 
 Click `Approve Plan`.
 
@@ -60,9 +78,9 @@ Narration:
 SentinelSwarm is decision support, not emergency authority. It never posts final assignments automatically.
 ```
 
-## Scene 5: Coordination Post
+## Scene 6: Coordination Post
 
-Time: 2:05-2:35
+Time: 2:15-2:40
 
 Click `Post to Coordination`, then open `#coordination`.
 
@@ -72,9 +90,9 @@ Narration:
 After approval, the team gets one clean final plan in the coordination channel, with routes, shelter assignment, supplies, volunteers, and the safety caveat.
 ```
 
-## Scene 6: Close
+## Scene 7: Close
 
-Time: 2:35-2:55
+Time: 2:40-2:55
 
 Show the final post or return to the Incident Control Room.
 

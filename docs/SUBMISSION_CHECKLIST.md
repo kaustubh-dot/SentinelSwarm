@@ -19,6 +19,7 @@
   - Weather/flood risk signal.
   - Severity ranking.
   - Volunteer/supply/shelter/route matching.
+  - Refresh Analysis that reruns the plan after Slack context changes.
   - Human approval before dispatch.
   - Final post to `#coordination`.
 - Social impact explanation includes:
@@ -50,6 +51,7 @@
 - Show Incident Control Room card.
 - Show Evidence Ledger.
 - Show source/status indicators.
+- Show Refresh Analysis after a route update if it fits the 3-minute edit.
 - Click Approve Plan.
 - Click Post to Coordination.
 - Show final `#coordination` post.
@@ -126,6 +128,8 @@ Run these before recording and before submission:
 - In Slack, run `@SentinelSwarm analyze Zone B risk`.
 - Confirm the card appears in thread.
 - Confirm status indicators are truthful.
+- Add the alternate route update and click Refresh Analysis.
+- Confirm the refreshed card returns to awaiting approval.
 - Click Approve Plan.
 - Click Post to Coordination.
 - Confirm `#coordination` receives final plan.

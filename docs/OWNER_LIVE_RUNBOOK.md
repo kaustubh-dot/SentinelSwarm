@@ -91,6 +91,7 @@ Expected:
 - Evidence Ledger shows cited snippets.
 - Card includes evidence source, weather/flood status, incident, route guidance, volunteers, supplies, shelters, confidence, and human-approval disclaimer.
 - `Approve Plan` works.
+- `Refresh Analysis` reruns the plan and resets approval if new route/shelter context is posted.
 - `Post to Coordination` works after approval.
 - Final action plan appears in `#coordination`.
 - `Generate Handover` posts a handover summary in the thread.
@@ -112,8 +113,8 @@ SentinelSwarm attempts Slack Real-Time Search first, then gracefully falls back 
 For a strong proof that the app is not hardcoded, use `SENTINEL_FORCE_MOCKS=false` and verify the card status shows Real-Time Search or live Slack channel context:
 
 1. Change the `#routes` message.
-2. Rerun the incident.
-3. Confirm the route recommendation changes.
+2. Click `Refresh Analysis` in the existing Incident Control Room.
+3. Confirm the route recommendation changes and the card returns to awaiting approval.
 
 Example alternate route seed:
 
@@ -132,10 +133,11 @@ Recommended sequence:
 3. Send the Zone B natural incident message.
 4. Show the Incident Control Room.
 5. Point to Evidence Ledger and source/status indicators.
-6. Click `Approve Plan`.
-7. Click `Post to Coordination`.
-8. Show final `#coordination` post.
-9. End with:
+6. Add the alternate route update and click `Refresh Analysis`.
+7. Click `Approve Plan`.
+8. Click `Post to Coordination`.
+9. Show final `#coordination` post.
+10. End with:
 
 ```txt
 SentinelSwarm turns chaotic disaster-response Slack reports into evidence-linked, human-approved coordination plans.

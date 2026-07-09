@@ -3,6 +3,8 @@ import type { IncidentPlan } from "../planner/schema";
 type RenderOptions = {
   state?: "draft" | "approved" | "posted";
   approvedBy?: string;
+  refreshCount?: number;
+  lastRefreshedAt?: string;
 };
 
 const cap = (text: string, limit = 280): string => (text.length > limit ? `${text.slice(0, limit - 3)}...` : text);
@@ -34,12 +36,19 @@ const statusLine = (plan: IncidentPlan): string => {
 };
 
 export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOptions = {}): any[] => {
+  const refreshCount = options.refreshCount ?? 0;
   const stateText =
     options.state === "approved"
       ? `Approved by ${options.approvedBy ?? "coordinator"}`
       : options.state === "posted"
         ? "Posted to #coordination"
+        : refreshCount > 0
+          ? "Updated after refresh. Awaiting human approval"
         : "Awaiting human approval";
+  const refreshText =
+    refreshCount > 0
+      ? `\n*Refresh:* ${refreshCount} update${refreshCount === 1 ? "" : "s"}${options.lastRefreshedAt ? `, last ${options.lastRefreshedAt}` : ""}`
+      : "";
 
   const evidenceText = plan.evidence
     .slice(0, 4)
@@ -82,7 +91,7 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Severity:* ${plan.severity.toUpperCase()} | *Confidence:* ${Math.round(plan.confidence * 100)}%\n*Status:* ${stateText}\n${statusLine(plan)}`
+        text: `*Severity:* ${plan.severity.toUpperCase()} | *Confidence:* ${Math.round(plan.confidence * 100)}%\n*Status:* ${stateText}${refreshText}\n${statusLine(plan)}`
       }
     },
     {
@@ -165,6 +174,16 @@ export const renderIncidentControlRoom = (plan: IncidentPlan, options: RenderOpt
             emoji: false
           },
           action_id: "post_plan",
+          value: plan.planId
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Refresh Analysis",
+            emoji: false
+          },
+          action_id: "refresh_plan",
           value: plan.planId
         },
         {

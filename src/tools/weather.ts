@@ -17,6 +17,14 @@ const timeoutFetch = async (url: string, timeoutMs: number): Promise<Response> =
   }
 };
 
+const finiteNumbers = (values: unknown): number[] => {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  return values.filter((value): value is number => Number.isFinite(value));
+};
+
 export const getWeatherRisk = async (zone: Zone, forceMock: boolean): Promise<WeatherRisk> => {
   if (forceMock) {
     const mock = loadMockWeather(zone.id);
@@ -44,8 +52,14 @@ export const getWeatherRisk = async (zone: Zone, forceMock: boolean): Promise<We
     }
 
     const payload = (await response.json()) as { hourly?: { precipitation?: number[]; rain?: number[] } };
-    const precipitationValues = payload.hourly?.precipitation ?? payload.hourly?.rain ?? [];
-    const precipitationMm = Math.max(0, ...precipitationValues.filter((value) => Number.isFinite(value)));
+    const precipitationValues = finiteNumbers(payload.hourly?.precipitation).length > 0
+      ? finiteNumbers(payload.hourly?.precipitation)
+      : finiteNumbers(payload.hourly?.rain);
+    if (precipitationValues.length === 0) {
+      throw new Error("Open-Meteo weather payload did not include precipitation values");
+    }
+
+    const precipitationMm = Math.max(0, ...precipitationValues);
 
     return {
       precipitationMm,

@@ -16,7 +16,7 @@ SentinelSwarm turns chaotic Slack field reports into a verified, prioritized, hu
 @SentinelSwarm analyze Zone B risk
 ```
 
-The app gathers Slack context with Real-Time Search when available, combines it with weather/flood signals and local resource data, then renders a Block Kit Incident Control Room. The card shows evidence snippets, severity, route conflicts, shelter needs, supply actions, volunteer matches, confidence, and source status indicators. A human must approve before the final plan can be posted to `#coordination`.
+The app gathers Slack context with Real-Time Search when available, combines it with weather/flood signals and local resource data, then renders a Block Kit Incident Control Room. The card shows evidence snippets, severity, route conflicts, shelter needs, supply actions, volunteer matches, confidence, refresh status, and source status indicators. A human must approve before the final plan can be posted to `#coordination`.
 
 ## Inspiration
 
@@ -38,23 +38,24 @@ During floods and landslides, response teams often already have the facts they n
 1. Seed Slack channels with fictional Zone B reports.
 2. Trigger `@SentinelSwarm analyze Zone B risk`.
 3. Review the Incident Control Room.
-4. Click `Approve Plan`.
-5. Click `Post to Coordination`.
-6. Confirm the final plan appears in `#coordination`.
+4. Optionally add a new route update and click `Refresh Analysis` to prove the plan responds to live Slack changes.
+5. Click `Approve Plan`.
+6. Click `Post to Coordination`.
+7. Confirm the final plan appears in `#coordination`.
 
 ## Slack Technologies Used
 
 - App mentions as the reliable user trigger.
 - Real-Time Search API through `assistant.search.context`.
 - Block Kit for the main interface.
-- Button interactivity for approval, posting, and handover.
+- Button interactivity for refresh, approval, posting, and handover.
 - Socket Mode for reliable local demo execution.
 
 ## Fallback-Safe Design
 
 The demo works even if services fail:
 
-- RTS failure falls back to `mockContext.json`.
+- RTS failure falls back to live Slack channel scan, then `mockContext.json`.
 - Weather failure falls back to `mockWeather.json`.
 - Flood failure falls back to `mockFlood.json`.
 - LLM failure or invalid JSON falls back to deterministic planning.
@@ -72,6 +73,7 @@ The hardest part was keeping the demo Slack-native and reliable while still show
 
 - End-to-end Slack mention to Incident Control Room.
 - Evidence Ledger with Slack snippets and links when available.
+- Refresh Analysis button that reruns the plan against latest Slack context.
 - Weather/flood risk integration with local fallbacks.
 - Route, shelter, supply, and volunteer matching.
 - Human approval before final coordination post.

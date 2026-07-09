@@ -8,6 +8,7 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 @SentinelSwarm analyze Zone B risk
 -> Incident Control Room appears
 -> Evidence Ledger shows why the plan was created
+-> Refresh Analysis can rerun after a new route update
 -> Approve Plan
 -> Post to Coordination
 -> #coordination receives the final action plan
@@ -18,9 +19,10 @@ SentinelSwarm is a Slack-native crisis coordination agent for the Slack Agent Bu
 1. Show seeded Slack chaos across `#alerts`, `#field-reports`, `#routes`, `#shelters`, `#supplies`, and `#volunteers`.
 2. In `#field-reports`, run `@SentinelSwarm analyze Zone B risk`.
 3. Review the Block Kit Incident Control Room: evidence, source statuses, risk signals, severity, routes, shelter, volunteers, supplies, and recommended plan.
-4. Click `Approve Plan`.
-5. Click `Post to Coordination`.
-6. Show the final approved plan in `#coordination`.
+4. Add a changed route update and click `Refresh Analysis` to show the plan updates from Slack context.
+5. Click `Approve Plan`.
+6. Click `Post to Coordination`.
+7. Show the final approved plan in `#coordination`.
 
 ## Why It Is Roadblock-Safe
 

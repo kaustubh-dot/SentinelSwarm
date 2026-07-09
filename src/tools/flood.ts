@@ -17,6 +17,14 @@ const timeoutFetch = async (url: string, timeoutMs: number): Promise<Response> =
   }
 };
 
+const finiteNumbers = (values: unknown): number[] => {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  return values.filter((value): value is number => Number.isFinite(value));
+};
+
 export const getFloodRisk = async (zone: Zone, forceMock: boolean): Promise<FloodRisk> => {
   if (forceMock) {
     const mock = loadMockFlood(zone.id);
@@ -50,8 +58,14 @@ export const getFloodRisk = async (zone: Zone, forceMock: boolean): Promise<Floo
       };
     };
 
-    const discharge = Math.max(0, ...(payload.daily?.river_discharge ?? []).filter((value) => Number.isFinite(value)));
-    const mean = Math.max(1, ...(payload.daily?.river_discharge_mean ?? []).filter((value) => Number.isFinite(value)));
+    const dischargeValues = finiteNumbers(payload.daily?.river_discharge);
+    const meanValues = finiteNumbers(payload.daily?.river_discharge_mean).filter((value) => value > 0);
+    if (dischargeValues.length === 0 || meanValues.length === 0) {
+      throw new Error("Open-Meteo flood payload did not include discharge values");
+    }
+
+    const discharge = Math.max(0, ...dischargeValues);
+    const mean = Math.max(1, ...meanValues);
     const floodRiskIndex = Math.min(discharge / mean, 1.5);
 
     return {

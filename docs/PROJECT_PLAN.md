@@ -68,14 +68,16 @@ The MVP must support this end-to-end flow:
 2. A user types `@SentinelSwarm analyze Zone B risk`.
 3. The app receives an `app_mention` event and extracts the requested zone.
 4. The app tries Real-Time Search with the event `action_token`.
-5. If RTS fails, the app loads `mockContext.json`.
-6. The app loads local JSON data for zones, shelters, routes, supplies, and volunteers.
-7. The app fetches Open-Meteo weather/flood signals where available, with mock fallbacks.
-8. The app produces a validated plan using the deterministic fallback planner first.
-9. Optional LLM planner runs behind an adapter and schema validation.
-10. The app renders a Block Kit Incident Control Room with an Evidence Ledger in the thread.
-11. A user clicks Approve Plan.
-12. A user clicks Post to Coordination.
+5. If RTS fails, the app scans live Slack demo channels.
+6. If live Slack scan fails, the app loads `mockContext.json`.
+7. The app loads local JSON data for zones, shelters, routes, supplies, and volunteers.
+8. The app fetches Open-Meteo weather/flood signals where available, with mock fallbacks.
+9. The app produces a validated plan using the deterministic fallback planner first.
+10. Optional LLM planner runs behind an adapter and schema validation.
+11. The app renders a Block Kit Incident Control Room with an Evidence Ledger in the thread.
+12. A user may click Refresh Analysis to rerun against latest Slack context.
+13. A user clicks Approve Plan.
+14. A user clicks Post to Coordination.
 13. The app posts the approved plan to `#coordination`.
 
 ## Non-Goals

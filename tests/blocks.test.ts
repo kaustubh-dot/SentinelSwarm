@@ -43,6 +43,48 @@ describe("renderIncidentControlRoom", () => {
     expect(rendered).not.toContain("example.slack.com");
     expect(rendered).toContain("Approve Plan");
     expect(rendered).toContain("Post to Coordination");
+    expect(rendered).toContain("Refresh Analysis");
+  });
+
+  it("renders refresh state when a plan has been updated", () => {
+    const localData = loadLocalData();
+    const zone = findZone(localData.zones, "Zone B");
+    const plan = createFallbackPlan({
+      zone,
+      localData,
+      evidence: loadMockContext(),
+      contextStatus: "slack",
+      weather: {
+        precipitationMm: 8.4,
+        signal: {
+          label: "Weather",
+          summary: "Mock weather",
+          source: "mock",
+          scoreImpact: 16
+        }
+      },
+      flood: {
+        floodRiskIndex: 0.92,
+        signal: {
+          label: "Flood",
+          summary: "Mock flood",
+          source: "mock",
+          scoreImpact: 23
+        }
+      }
+    });
+
+    const rendered = JSON.stringify(
+      renderIncidentControlRoom(plan, {
+        state: "draft",
+        refreshCount: 2,
+        lastRefreshedAt: "2026-07-09T10:00:00.000Z"
+      })
+    );
+
+    expect(rendered).toContain("Updated after refresh. Awaiting human approval");
+    expect(rendered).toContain("2 updates");
+    expect(rendered).toContain("2026-07-09T10:00:00.000Z");
   });
 
   it("keeps LLM-influenced section text within Slack Block Kit limits", () => {

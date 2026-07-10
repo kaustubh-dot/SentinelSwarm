@@ -6,6 +6,27 @@ Built for the Slack Agent Builder Challenge, SentinelSwarm turns scattered Slack
 
 The demo is intentionally focused: **Zone B monsoon flood response** for a campus, NGO, or volunteer operations team.
 
+## Submission Snapshot
+
+**Track:** Slack Agent for Good
+
+**Elevator pitch:** Slack-native flood response coordination that turns scattered field reports into evidence-backed, human-approved action plans.
+
+**Required Slack technology:** Slack Real-Time Search through `assistant.search.context`, initiated from a user `app_mention` event. Slack channel scan and deterministic local context are labeled fallbacks when RTS is unavailable.
+
+**Core proof:**
+
+```txt
+@SentinelSwarm analyze Zone B risk
+  -> Incident Control Room
+  -> evidence and source statuses
+  -> Refresh Analysis after a new Slack route update
+  -> Approve Plan
+  -> Post to #coordination
+```
+
+This is a new Slack agent for a real social-impact problem: helping campus, nonprofit, and mutual-aid responders coordinate flood relief without hiding uncertainty or giving an automated system authority to dispatch people.
+
 ![SentinelSwarm turns scattered Slack reports into an action plan](docs/assets/readme-illustrations/01-slack-chaos-action-plan.png)
 
 ## Why SentinelSwarm
@@ -20,6 +41,12 @@ During a fast-moving flood response, the hard part is not only knowing that some
 - Who approved the final plan?
 
 SentinelSwarm keeps that workflow inside Slack. It uses Slack Real-Time Search when available, combines the retrieved context with local operational data and weather/flood signals, and renders a concise Block Kit control room that is built for human review.
+
+## Social Impact
+
+Flood response teams lose time when a blocked route, shelter capacity change, supply request, or volunteer update is buried in a busy channel. SentinelSwarm reduces that coordination cost by turning existing Slack reports into a shared operational picture with cited evidence, severity ranking, resource matching, and a clear handoff.
+
+The intended users are campus safety teams, nonprofit responders, community organizers, and volunteer coordinators who may not have a dedicated emergency-operations platform. The system is deliberately decision support: it exposes the evidence and confidence, labels live versus fallback signals, and requires a human approval click before the plan reaches `#coordination`. This makes the workflow safer to review, easier to hand off across shifts, and useful even when one external service is unavailable.
 
 ## Product Demo
 
@@ -63,6 +90,17 @@ SentinelSwarm replies in thread with an Incident Control Room that includes:
 - **Requires human approval.** The app never posts final assignments automatically.
 - **Posts where teams coordinate.** Approved plans are sent to `#coordination` as clean responder-ready instructions.
 
+## Why This Is More Than a Hardcoded Demo
+
+The initial plan is built from multiple Slack channels and operational datasets. The refresh path is an explicit change test: add a new route update in Slack, click `Refresh Analysis`, and the app reruns retrieval, evidence assembly, scoring, and plan generation. The refreshed plan returns to draft and hides the final posting action until a coordinator approves it again.
+
+The card makes the system inspectable instead of presenting an unexplained answer:
+
+- Evidence Ledger snippets show the reports used by the planner.
+- Source badges distinguish RTS, Slack scan enrichment, mock context, live weather, mock weather, live flood, mock flood, and deterministic planning.
+- Route, shelter, volunteer, and supply recommendations are matched against local structured data.
+- Confidence and the decision-support disclaimer remain visible at the approval boundary.
+
 ## Roadblock-Safe By Design
 
 The demo continues to work even when external services fail. Every dependency has a deterministic fallback:
@@ -90,6 +128,36 @@ The demo continues to work even when external services fail. Every dependency ha
 - Open-Meteo weather and flood signals
 - Optional Gemini refinement with deterministic fallback
 - Vitest test suite
+
+## Judge Test Instructions
+
+The deployed service connects to Slack through Socket Mode; no inbound Slack webhook is required. In the provided Slack developer sandbox:
+
+1. Open `#field-reports`.
+2. Send `@SentinelSwarm ping` to confirm the agent is online.
+3. Send `@SentinelSwarm analyze Zone B risk`.
+4. Review the Incident Control Room, Evidence Ledger, source statuses, risk summary, and resource matches.
+5. Add this route update in the thread or channel:
+
+```txt
+Zone B route update: Route R2 through Riverside Lane is now open for emergency vehicles. Route R4 via Hill School Road is blocked by stalled traffic.
+```
+
+6. Click `Refresh Analysis` and verify that the plan updates and returns to awaiting approval.
+7. Click `Approve Plan`, then `Post to Coordination`.
+8. Open `#coordination` and verify the approved handoff.
+
+The same workflow remains runnable locally with `npm.cmd run dev`, and all external dependencies have deterministic fallbacks for reliable judging.
+
+## Submission Assets
+
+- [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
+- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
+- [Fresh live proof log](docs/DEMO_PROOF.md)
+- [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
+- [Judge Q&A](docs/JUDGE_QA.md)
+
+The final submission video is kept under three minutes, shows the working Slack app rather than slides alone, and contains no tokens, private data, copyrighted music, or sensitive information. The Slack developer sandbox is shared with the required judge accounts before submission.
 
 ## Quick Start
 

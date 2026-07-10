@@ -168,7 +168,7 @@ Then in Slack:
 @SentinelSwarm analyze Zone B risk
 ```
 
-SentinelSwarm uses Socket Mode, so the local demo does not need a public webhook URL or deployed backend.
+SentinelSwarm uses Socket Mode, so Slack does not need a public inbound webhook URL. For judge-accessible hosting, deploy the same repository to Railway using the root [Dockerfile](Dockerfile); see [docs/RAILWAY_DEPLOY.md](docs/RAILWAY_DEPLOY.md).
 
 ## Seed A Demo Workspace
 

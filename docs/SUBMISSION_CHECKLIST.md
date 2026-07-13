@@ -1,10 +1,10 @@
 # Submission Checklist
 
-## Deadline
+## Finalization
 
-- Final deadline: July 13, 2026 at 5:00pm PDT.
-- India time: July 14, 2026 at 5:30am IST.
-- Freeze risky feature work at least 24 hours before the deadline.
+- Confirm the live deadline on Devpost before finalizing.
+- Freeze risky feature work before recording.
+- Do not change the sandbox, video, or submission assets after the deadline closes.
 
 ## Devpost Fields
 
@@ -36,7 +36,6 @@
 
 ## Demo Video Checklist
 
-- Storyboard source: `docs/DEMO_VIDEO_STORYBOARD.md`.
 - Seed message source: `docs/DEMO_SEED_MESSAGES.md`.
 - Optional seed command: `npm.cmd run seed:slack -- --post`.
 - Length is under 3 minutes.
@@ -124,7 +123,7 @@ Run these before recording and before submission:
 - `npm run build`
 - `npm test`
 - `npm run check:secrets`
-- Start app in Socket Mode.
+- Confirm the Railway health endpoint, or start local Socket Mode only as a fallback. Never run both listeners at once.
 - Seed Slack with `npm.cmd run seed:slack -- --post` or manually paste `docs/DEMO_SEED_MESSAGES.md`.
 - In Slack, run `@SentinelSwarm ping`.
 - In Slack, run `@SentinelSwarm analyze Zone B risk`.

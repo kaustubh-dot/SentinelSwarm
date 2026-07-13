@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1125" viewBox="0 0 1800 1125" role="img" aria-labelledby="title desc">
+  <title id="title">SentinelSwarm architecture</title>
+  <desc id="desc">A Slack-native flood response agent: Slack events feed contextual retrieval, risk signals, and local response data into a deterministic planner. A human must approve before the final coordination post.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 44px Arial, sans-serif; fill: #162033; }
+      .sub { font: 400 21px Arial, sans-serif; fill: #536277; }
+      .group { fill: #ffffff; stroke: #dbe3ee; stroke-width: 2; }
+      .group-title { font: 700 22px Arial, sans-serif; fill: #344258; letter-spacing: .5px; }
+      .node { fill: #ffffff; stroke: #9dacbe; stroke-width: 2; }
+      .slack { fill: #f4edff; stroke: #7c3aed; }
+      .signal { fill: #e8f7f4; stroke: #0f766e; }
+      .fallback { fill: #fff8df; stroke: #b45309; stroke-dasharray: 8 6; }
+      .plan { fill: #eaf2ff; stroke: #2563eb; }
+      .human { fill: #fff0f1; stroke: #be123c; }
+      .coord { fill: #edf8ee; stroke: #2f855a; }
+      .node-title { font: 700 20px Arial, sans-serif; fill: #182337; }
+      .node-body { font: 400 16px Arial, sans-serif; fill: #49576a; }
+      .small { font: 600 15px Arial, sans-serif; fill: #8a4b08; }
+      .refresh-title { font: 700 16px Arial, sans-serif; fill: #0f5d56; }
+      .refresh-body { font: 400 13px Arial, sans-serif; fill: #276860; }
+      .arrow-label { font: 700 15px Arial, sans-serif; fill: #334155; }
+      .legend { font: 600 14px Arial, sans-serif; fill: #536277; }
+      .arrow { stroke: #66758a; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .fallback-arrow { stroke: #b45309; stroke-width: 3; fill: none; stroke-dasharray: 9 7; marker-end: url(#fallback-arrow); }
+      .refresh-arrow { stroke: #0f766e; stroke-width: 3; fill: none; stroke-dasharray: 8 6; marker-end: url(#refresh-arrow); }
+      .approval-arrow { stroke: #be123c; stroke-width: 4; fill: none; marker-end: url(#approval-arrow); }
+      .footer { font: 600 17px Arial, sans-serif; fill: #334155; }
+    </style>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 z" fill="#66758a"/></marker>
+    <marker id="fallback-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 z" fill="#b45309"/></marker>
+    <marker id="refresh-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 z" fill="#0f766e"/></marker>
+    <marker id="approval-arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0,0 L11,5.5 L0,11 z" fill="#be123c"/></marker>
+  </defs>
+
+  <rect class="bg" width="1800" height="1125"/>
+  <text x="82" y="82" class="title">SentinelSwarm: Slack-Native Crisis Coordination</text>
+  <text x="82" y="118" class="sub">Slack-native monsoon coordination from workspace evidence and live risk signals, with safe fallbacks and human approval.</text>
+
+  <rect class="group" x="70" y="170" width="360" height="760" rx="18"/>
+  <text x="100" y="215" class="group-title">1. SLACK SIGNALS</text>
+  <rect class="node slack" x="105" y="255" width="290" height="115" rx="12"/>
+  <text x="130" y="297" class="node-title">Responder in Slack</text>
+  <text x="130" y="328" class="node-body">Field reports, route updates,</text>
+  <text x="130" y="351" class="node-body">shelter and supply requests</text>
+  <rect class="node slack" x="105" y="445" width="290" height="122" rx="12"/>
+  <text x="130" y="487" class="node-title">App Mention</text>
+  <text x="130" y="518" class="node-body">@SentinelSwarm analyze</text>
+  <text x="130" y="541" class="node-body">Zone B risk</text>
+  <rect class="node slack" x="105" y="642" width="290" height="120" rx="12"/>
+  <text x="130" y="684" class="node-title">Slack Bolt + Socket Mode</text>
+  <text x="130" y="715" class="node-body">Events and button actions</text>
+  <text x="130" y="738" class="node-body">Temporary plan state</text>
+
+  <rect class="group" x="475" y="170" width="830" height="760" rx="18"/>
+  <text x="505" y="215" class="group-title">2. EVIDENCE AND RISK INPUTS</text>
+  <rect class="node signal" x="515" y="255" width="330" height="120" rx="12"/>
+  <text x="540" y="297" class="node-title">Slack Real-Time Search</text>
+  <text x="540" y="328" class="node-body">assistant.search.context</text>
+  <text x="540" y="351" class="node-body">Mention action token, evidence links</text>
+  <rect class="node signal" x="915" y="255" width="340" height="120" rx="12"/>
+  <text x="940" y="297" class="node-title">Weather + Flood Signals</text>
+  <text x="940" y="328" class="node-body">Open-Meteo adapters</text>
+  <text x="940" y="351" class="node-body">Risk enrichment</text>
+  <rect class="node" x="515" y="455" width="330" height="120" rx="12"/>
+  <text x="540" y="497" class="node-title">Local Response Data</text>
+  <text x="540" y="528" class="node-body">Routes, shelters, supplies,</text>
+  <text x="540" y="551" class="node-body">volunteers and zones</text>
+  <rect class="node fallback" x="915" y="455" width="340" height="120" rx="12"/>
+  <text x="940" y="497" class="node-title">Deterministic Fallbacks</text>
+  <text x="940" y="528" class="node-body">Mock context, weather, and flood data</text>
+  <text x="940" y="551" class="node-body">+ optional Slack enrichment</text>
+  <text x="940" y="603" class="small">Used only when live sources fail</text>
+  <rect class="node plan" x="655" y="690" width="450" height="135" rx="12"/>
+  <text x="680" y="733" class="node-title">Deterministic Incident Planner</text>
+  <text x="680" y="764" class="node-body">Evidence fusion, severity ranking, resource matching</text>
+  <text x="680" y="790" class="node-body">Optional Gemini refinement, disabled by default</text>
+
+  <rect class="group" x="1350" y="170" width="380" height="760" rx="18"/>
+  <text x="1380" y="215" class="group-title">3. HUMAN CONTROL</text>
+  <rect class="node plan" x="1390" y="285" width="300" height="135" rx="12"/>
+  <text x="1415" y="327" class="node-title">Incident Control Room</text>
+  <text x="1415" y="358" class="node-body">Block Kit: Evidence Ledger,</text>
+  <text x="1415" y="381" class="node-body">status, confidence, plan</text>
+  <rect class="node human" x="1390" y="505" width="300" height="135" rx="12"/>
+  <text x="1415" y="547" class="node-title">Coordinator Approval</text>
+  <text x="1415" y="578" class="node-body">Explicit approval required</text>
+  <text x="1415" y="601" class="node-body">before posting assignments</text>
+  <rect class="node coord" x="1390" y="725" width="300" height="115" rx="12"/>
+  <text x="1415" y="767" class="node-title">#coordination Handoff</text>
+  <text x="1415" y="798" class="node-body">Approved action plan only</text>
+
+  <path class="arrow" d="M250 370 L250 445"/>
+  <path class="arrow" d="M250 567 L250 642"/>
+  <!-- Bolt fans out through the perimeter gutter so data paths never cross cards. -->
+  <path class="arrow" d="M395 702 L460 702 L460 315 L515 315"/>
+  <path class="arrow" d="M395 702 L460 702 L460 235 L1085 235 L1085 255"/>
+  <path class="arrow" d="M395 702 L460 702 L460 515 L515 515"/>
+
+  <!-- Inputs converge on separate planner ports below the cards. -->
+  <path class="arrow" d="M845 315 L875 315 L875 615 L780 615 L780 690"/>
+  <path class="arrow" d="M1255 315 L1280 315 L1280 675 L1080 675 L1080 690"/>
+  <path class="arrow" d="M680 575 L680 635 L850 635 L850 690"/>
+  <path class="fallback-arrow" d="M1085 575 L1085 650 L1010 650 L1010 690"/>
+
+  <!-- The draft-plan handoff enters the control room through its lower-left gutter. -->
+  <path class="arrow" d="M1105 758 L1365 758 L1365 420 L1450 420"/>
+  <rect x="1125" y="705" width="185" height="54" rx="6" fill="#ffffff"/>
+  <text x="1142" y="728" class="arrow-label">Evidence-backed</text>
+  <text x="1142" y="750" class="arrow-label">draft plan</text>
+  <rect x="1000" y="380" width="230" height="68" rx="10" fill="#e8f7f4" stroke="#0f766e" stroke-width="2"/>
+  <text x="1018" y="405" class="refresh-title">Refresh Analysis</text>
+  <text x="1018" y="426" class="refresh-body">Safe enrichment + replan</text>
+  <text x="1018" y="442" class="refresh-body">Approval resets</text>
+  <path class="refresh-arrow" d="M1390 400 L1230 414"/>
+  <path class="refresh-arrow" d="M1115 448 L1115 455"/>
+  <path class="approval-arrow" d="M1540 420 L1540 505"/>
+  <path class="approval-arrow" d="M1540 640 L1540 725"/>
+
+  <text x="1160" y="956" class="legend">Solid: normal flow  |  Dashed: fallback or refresh</text>
+  <rect x="70" y="975" width="1660" height="86" rx="14" fill="#fff4f4" stroke="#fecdd3" stroke-width="2"/>
+  <text x="105" y="1028" class="footer">Safety boundary: SentinelSwarm analyzes evidence and recommends actions. Human approval is required before it posts to #coordination.</text>
+</svg>

@@ -90,7 +90,7 @@ SentinelSwarm replies in thread with an Incident Control Room that includes:
 - **Requires human approval.** The app never posts final assignments automatically.
 - **Posts where teams coordinate.** Approved plans are sent to `#coordination` as clean responder-ready instructions.
 
-## Why This Is More Than a Hardcoded Demo
+## Evidence-Backed, Refreshable Planning
 
 The initial plan is built from multiple Slack channels and operational datasets. The refresh path is an explicit change test: add a new route update in Slack, click `Refresh Analysis`, and the app reruns retrieval, evidence assembly, scoring, and plan generation. The refreshed plan returns to draft and hides the final posting action until a coordinator approves it again.
 
@@ -151,8 +151,8 @@ The same workflow remains runnable locally with `npm.cmd run dev`, and all exter
 
 ## Submission Assets
 
-- [Architecture diagram](docs/ARCHITECTURE_DIAGRAM.md)
-- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
+- [Architecture diagram source](docs/assets/sentinelswarm-architecture.svg)
+- [Architecture notes](docs/ARCHITECTURE_DIAGRAM.md)
 - [Fresh live proof log](docs/DEMO_PROOF.md)
 - [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
 - [Judge Q&A](docs/JUDGE_QA.md)
@@ -287,29 +287,11 @@ Use the optional write-path check only when you are comfortable posting a harmle
 npm run smoke:slack -- --post-test
 ```
 
-## Project Structure
-
-```txt
-src/
-  app.ts                 Slack Bolt app bootstrap
-  config.ts              Environment validation
-  slack/                 Slack handlers, Block Kit, RTS, final posting
-  tools/                 Weather, flood, and local data loading
-  planner/               Severity, schemas, prompt, LLM, fallback planner
-  data/                  Volunteers, supplies, routes, shelters, zones, mocks
-
-tests/                   Vitest coverage for planner, Slack blocks, data, RTS, safety checks
-docs/                    Setup, demo script, architecture, judge Q&A, submission assets
-```
-
 ## Documentation
 
 - [Slack setup](docs/SLACK_SETUP.md)
-- [Manual setup](docs/MANUAL_SETUP.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Demo script](docs/DEMO_SCRIPT.md)
 - [Demo seed messages](docs/DEMO_SEED_MESSAGES.md)
-- [Demo video storyboard](docs/DEMO_VIDEO_STORYBOARD.md)
 - [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
 - [Judge Q&A](docs/JUDGE_QA.md)
 - [Submission checklist](docs/SUBMISSION_CHECKLIST.md)

@@ -1,14 +1,16 @@
 # Architecture Diagram
 
-Use this diagram in the Devpost submission or as a quick screenshot during judging.
+The submission-ready, editable source is [`assets/sentinelswarm-architecture.svg`](assets/sentinelswarm-architecture.svg). Convert that file to PNG, JPG, or PDF for the Devpost upload.
+
+The Mermaid version below is kept as a compact, text-diffable reference for the same runtime architecture.
 
 ```mermaid
 flowchart LR
   Responder["Responder in Slack"] --> Mention["@SentinelSwarm analyze Zone B risk"]
-  Mention --> Bolt["Slack Bolt app<br/>Socket Mode"]
+  Mention --> Bolt["Slack Bolt app<br/>Socket Mode + temporary plan state"]
   Bolt --> RTS["assistant.search.context<br/>Real-Time Search"]
   RTS --> Evidence["Evidence Ledger<br/>Slack snippets + links"]
-  RTS -. failure .-> MockContext["mockContext.json"]
+  RTS -. unavailable or no result .-> MockContext["mockContext.json<br/>guaranteed fallback"]
   MockContext -. optional enrichment .-> SlackScan["Live Slack channel scan"]
   SlackScan --> Evidence
   Bolt --> RiskTools["Weather + flood adapters"]
@@ -17,16 +19,14 @@ flowchart LR
   Weather -. failure .-> MockWeather["mockWeather.json"]
   Flood -. failure .-> MockFlood["mockFlood.json"]
   Bolt --> LocalData["Local JSON<br/>routes, shelters, supplies, volunteers"]
-  Evidence --> Planner["Deterministic planner<br/>optional Gemini refinement"]
+  Evidence --> Planner["Deterministic planner<br/>evidence fusion, severity ranking, resource matching<br/>optional Gemini refinement"]
   MockContext --> Planner
   MockWeather --> Planner
   MockFlood --> Planner
   LocalData --> Planner
-  Planner --> Zod["Zod validation"]
-  Zod --> BlockKit["Block Kit Incident Control Room"]
-  BlockKit --> Refresh["Refresh Analysis<br/>latest Slack context"]
+  Planner -->|"Evidence-backed draft plan"| BlockKit["Block Kit Incident Control Room"]
+  BlockKit --> Refresh["Refresh Analysis<br/>safe enrichment + replan"]
   Refresh --> MockContext
-  MockContext -. optional enrichment .-> SlackScan
   BlockKit --> Approval["Approve Plan button"]
   Approval --> Coordination["Post to #coordination"]
   BlockKit --> Handover["Generate Handover"]
@@ -34,12 +34,13 @@ flowchart LR
 
 ## Fallback Contract
 
-- RTS failure: use `src/data/mockContext.json` as the guaranteed fallback, then enrich with live Slack channel scan when available.
+- RTS failure: use `src/data/mockContext.json` as the guaranteed fallback, then apply optional live Slack channel enrichment when available.
 - Weather failure: use `src/data/mockWeather.json`.
 - Flood failure: use `src/data/mockFlood.json`.
 - LLM failure or invalid JSON: use deterministic planner after one repair attempt.
+- Planner output is validated with Zod before the Incident Control Room is rendered.
 - Missing `SLACK_COORDINATION_CHANNEL_ID`: show a readable Slack setup hint and keep the plan in the source thread.
 
 ## Human-Control Boundary
 
-SentinelSwarm recommends a plan, but it does not dispatch volunteers or post final assignments until a coordinator clicks approval and then posts to `#coordination`.
+SentinelSwarm analyzes evidence and recommends actions. It does not dispatch volunteers or post to `#coordination` until a coordinator explicitly approves the plan.

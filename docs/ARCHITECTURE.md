@@ -100,16 +100,7 @@ sequenceDiagram
 
 The planner never posts final assignments directly.
 
-Plan state should include:
-
-- `planId`.
-- `status`: `draft`, `approved`, or `posted`.
-- `approvedBy`.
-- `approvedAt`.
-- `threadTs`.
-- `coordinationChannelId`.
-
-For the hackathon MVP, state can live in memory. If the process restarts, the user can rerun the analysis.
+Temporary plan state records the plan ID, `draft` / `approved` / `posted` state, approver, source message/thread metadata, and refresh metadata. It is stored locally with a six-hour TTL. A hosted runtime restart can invalidate an existing card, in which case the coordinator reruns the analysis to create a fresh plan.
 
 ## Fallback Flow
 
@@ -133,7 +124,7 @@ flowchart TD
   Deterministic --> BlockKit
 ```
 
-## Planned Module Boundaries
+## Module Boundaries
 
 - `src/app.ts`: bootstraps Bolt app.
 - `src/config.ts`: validates env vars and feature flags.

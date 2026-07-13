@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY tsconfig.json manifest.yaml README.md AGENTS.md ./
+COPY tsconfig.json ./
 COPY src ./src
 COPY scripts ./scripts
 

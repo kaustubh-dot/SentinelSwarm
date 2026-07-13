@@ -313,6 +313,7 @@ docs/                    Setup, demo script, architecture, judge Q&A, submission
 - [Devpost submission draft](docs/DEVPOST_SUBMISSION_DRAFT.md)
 - [Judge Q&A](docs/JUDGE_QA.md)
 - [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
+- [Railway deployment](docs/RAILWAY_DEPLOY.md)
 
 ## Safety Model
 

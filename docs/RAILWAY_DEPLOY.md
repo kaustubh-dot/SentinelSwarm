@@ -7,7 +7,7 @@ SentinelSwarm can run on Railway as a single long-running Docker service. The se
 1. Push `main` to GitHub.
 2. In Railway, choose **New Project** and **Deploy from GitHub Repo**.
 3. Select the repository and the `main` branch.
-4. Railway should report `Using detected Dockerfile!` because the repository has a root-level `Dockerfile`.
+4. Railway should use `DOCKERFILE` because the repository has a root-level `Dockerfile` and `railway.json` pins the builder explicitly.
 5. Add the variables below in the service's **Variables** tab.
 6. Deploy the staged variable changes.
 
@@ -27,6 +27,8 @@ Do not upload `.env` or add `GOOGLE_API_KEY` for the judged demo.
 ## Verify
 
 The Railway-provided `PORT` automatically enables the safe health server. Generate a Railway public domain and open `/healthz`. The response contains only app status, runtime mode, fallback mode, LLM mode, and uptime.
+
+Keep **Serverless** disabled. Socket Mode is a long-running outbound connection and must not be put to sleep between Slack events.
 
 Then inspect the logs for:
 

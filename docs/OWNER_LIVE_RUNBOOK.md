@@ -1,7 +1,7 @@
 # Owner Live Runbook
 
-Use this when you are operating the live SentinelSwarm Slack demo. This is your step-by-step path from local preflight to recording.
-The judged runtime is local Slack Socket Mode. No public inbound webhook or hosted backend is required for the recorded demo.
+Use this when you are operating the live SentinelSwarm Slack demo. This is your step-by-step path from deployment or local preflight to recording.
+Railway is the preferred persistent runtime when it is healthy; local Slack Socket Mode remains the recording and emergency fallback. Neither path needs a public inbound Slack webhook.
 
 ## 1. Preflight
 
